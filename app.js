@@ -194,3 +194,78 @@ async function createJob() {
 
   alert("Job submitted & worker assigned!");
 }
+
+async function workerLogin() {
+  const email = document.getElementById("workerEmail").value;
+
+  if (!email) {
+    alert("Enter email");
+    return;
+  }
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .eq("role", "worker")
+    .maybeSingle();
+
+  if (!user) {
+    alert("Worker not found");
+    return;
+  }
+
+  localStorage.setItem("worker_id", user.id);
+
+  document.getElementById("workerDashboard").style.display = "block";
+
+  loadWorkerJobs();
+}
+
+async function loadWorkerJobs() {
+  const workerId = localStorage.getItem("worker_id");
+
+  const { data: jobs } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("assigned_to", workerId)
+    .neq("status", "completed");
+
+  const container = document.getElementById("jobs");
+  container.innerHTML = "";
+
+  jobs.forEach(job => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <hr>
+      <p><b>Service:</b> ${job.service}</p>
+      <p><b>Description:</b> ${job.description}</p>
+      <p><b>Region:</b> ${job.region}</p>
+
+      <button onclick="rejectJob('${job.id}')">Reject</button>
+      <button onclick="markDone('${job.id}')">Mark Done</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function rejectJob(jobId) {
+  await supabase.rpc("reject_worker", {
+    job_uuid: jobId
+  });
+
+  alert("Job rejected. Assigning new worker...");
+  loadWorkerJobs();
+}
+
+async function markDone(jobId) {
+  await supabase.rpc("worker_mark_done", {
+    job_uuid: jobId
+  });
+
+  alert("Marked as done. Awaiting customer confirmation.");
+  loadWorkerJobs();
+}
+

@@ -52,3 +52,25 @@ async function verifyUser() {
 
   alert("Verification complete!");
 }
+
+async function createJob() {
+  const email = localStorage.getItem("customer_email");
+
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single();
+
+  await supabase.from("jobs").insert([
+    {
+      customer_id: user.id,
+      service: document.getElementById("service").value,
+      description: document.getElementById("desc").value,
+      region: document.getElementById("region").value,
+      price: document.getElementById("price").value
+    }
+  ]);
+
+  alert("Job submitted!");
+}

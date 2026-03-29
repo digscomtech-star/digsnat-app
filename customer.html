@@ -1,1 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Customer Booking</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
 
+<h2>Complete Your Booking</h2>
+
+<div id="verification">
+  <h3>Verification</h3>
+  <input id="name" placeholder="Full Name" />
+  <input type="file" id="idUpload" />
+  <input type="file" id="faceUpload" />
+  <button onclick="verifyUser()">Verify</button>
+</div>
+
+<hr>
+
+<h3>Book a Job</h3>
+<input id="service" placeholder="Service" />
+<input id="desc" placeholder="Description" />
+<input id="region" placeholder="Region" />
+<input id="price" placeholder="Price" />
+<button onclick="createJob()">Submit Job</button>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

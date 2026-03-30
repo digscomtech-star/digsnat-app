@@ -12,7 +12,9 @@
   <h3>Verification</h3>
   <input id="name" placeholder="Full Name" />
   <input type="file" id="idUpload" />
-  <input type="file" id="faceUpload" />
+ <video id="camera" width="250" autoplay></video>
+<button onclick="captureFace()">Capture Face</button>
+<canvas id="canvas" style="display:none;"></canvas>
   <button onclick="verifyUser()">Verify</button>
 </div>
 

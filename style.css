@@ -1,12 +1,33 @@
-
 body {
   font-family: Arial;
+  background: #0f172a;
+  color: white;
   padding: 20px;
 }
 
-input, button {
-  display: block;
-  margin: 10px 0;
-  padding: 10px;
+h1, h2, h3 {
+  color: #38bdf8;
+}
+
+input {
   width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 12px;
+  width: 100%;
+  margin: 10px 0;
+  background: #38bdf8;
+  border: none;
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+button:hover {
+  background: #0ea5e9;
 }

@@ -39,12 +39,10 @@ async function verifyUser() {
   try {
     const email = localStorage.getItem("customer_email");
     const name = document.getElementById("name").value;
-
     const idFile = document.getElementById("idUpload").files[0];
-    const faceFile = document.getElementById("faceUpload").files[0];
 
-    if (!email || !name || !idFile || !faceFile) {
-      alert("Please fill all fields and upload files");
+    if (!email || !name || !idFile || !capturedImage) {
+      alert("Complete all fields and capture face");
       return;
     }
 
@@ -57,42 +55,31 @@ async function verifyUser() {
     if (idError) throw idError;
 
     // Upload Face
-    const facePath = "faces/" + Date.now() + "_" + faceFile.name;
+    const facePath = "faces/" + Date.now() + "_face.jpg";
     const { error: faceError } = await supabase.storage
       .from("user-faces")
-      .upload(facePath, faceFile);
+      .upload(facePath, capturedImage);
 
     if (faceError) throw faceError;
 
-    // Check if user exists
-    const { data: existingUser, error: fetchError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
+    // Save user
+    const { error } = await supabase.from("users").insert([
+      {
+        email,
+        full_name: name,
+        role: "customer",
+        id_image: idPath,
+        face_image: facePath,
+        verified: true
+      }
+    ]);
 
-    if (fetchError) throw fetchError;
+    if (error) throw error;
 
-    // Create if not exists
-    if (!existingUser) {
-      const { error: insertError } = await supabase.from("users").insert([
-        {
-          email,
-          full_name: name,
-          role: "customer",
-          id_image: idPath,
-          face_image: facePath,
-          verified: true
-        }
-      ]);
-
-      if (insertError) throw insertError;
-    }
-
-    alert("Verification complete!");
+    alert("Verification successful!");
 
   } catch (err) {
-    console.error("Verification error:", err);
+    console.error(err);
     alert("Verification failed: " + err.message);
   }
 }
@@ -293,3 +280,11 @@ function captureFace() {
     alert("Face captured!");
   }, "image/jpeg");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const jobBtn = document.getElementById("submitJobBtn");
+
+  if (jobBtn) {
+    jobBtn.addEventListener("click", createJob);
+  }
+});

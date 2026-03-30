@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM Dashboard - DigsNat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <!-- Access Check Overlay -->
+    <div id="accessOverlay" class="access-overlay">
+        <div class="access-box">
+            <h2>🔒 Secure Access Required</h2>
+            <input type="password" id="accessKey" placeholder="Enter access code">
+            <button onclick="checkAccess()" class="btn-primary">Access Dashboard</button>
+            <p class="error" id="accessError"></p>
+        </div>
+    </div>
+
+    <!-- Main GM Dashboard (Hidden until auth) -->
+    <div id="gmDashboard" style="display:none;">
+        <header class="dashboard-header gm-header">
+            <div class="container">
+                <h1>👑 General Manager Dashboard</h1>
+                <button class="btn-logout" onclick="logoutGM()">Exit</button>
+            </div>
+        </header>
+
+        <nav class="gm-nav">
+            <div class="container">
+                <button onclick="showSection('overview')" class="nav-btn active">Overview</button>
+                <button onclick="showSection('jobs')" class="nav-btn">All Jobs</button>
+                <button onclick="showSection('workers')" class="nav-btn">Workers</button>
+                <button onclick="showSection('customers')" class="nav-btn">Customers</button>
+                <button onclick="showSection('payments')" class="nav-btn">Payments</button>
+                <button onclick="showSection('staff')" class="nav-btn">Staff Manager</button>
+                <button onclick="showSection('services')" class="nav-btn">Services</button>
+                <button onclick="showSection('content')" class="nav-btn">Platform Content</button>
+                <button onclick="showSection('logs')" class="nav-btn">System Logs</button>
+            </div>
+        </nav>
+
+        <main class="gm-main">
+            <!-- Overview Section -->
+            <section id="overview" class="gm-section active">
+                <div class="container">
+                    <div class="stats-grid gm-stats">
+                        <div class="stat-card">
+                            <h3>Total Jobs</h3>
+                            <p class="stat-number" id="totalJobs">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Revenue</h3>
+                            <p class="stat-number" id="totalRevenue">₦0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Workers</h3>
+                            <p class="stat-number" id="activeWorkers">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Pending Disputes</h3>
+                            <p class="stat-number" id="pendingDisputes">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Job Trends (Last 30 Days)</h3>
+                        <canvas id="trendsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Section -->
+            <section id="jobs" class="gm-section">
+                <div class="container">
+                    <h2>All Jobs</h2>
+                    <div class="filter-bar">
+                        <select id="jobStatusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="disputed">Disputed</option>
+                        </select>
+                        <input type="text" id="jobSearch" placeholder="Search jobs...">
+                    </div>
+                    <div id="allJobsList" class="data-table"></div>
+                </div>
+            </section>
+
+            <!-- Workers Section -->
+            <section id="workers" class="gm-section">
+                <div class="container">
+                    <h2>Worker Management</h2>
+                    <div id="workersList" class="data-table"></div>
+                </div>
+            </section>
+
+            <!-- Customers Section -->
+            <section id="customers" class="gm-section">
+                <div class="container">
+                    <h2>Customer Database</h2>
+                    <div id="customersList" class="data-table"></div>
+                </div>
+            </section>
+
+            <!-- Payments Section -->
+            <section id="payments" class="gm-section">
+                <div class="container">
+                    <h2>Payment Management</h2>
+                    <button onclick="generatePayroll()" class="btn-primary btn-large">Generate Payroll</button>
+                    
+                    <div id="payrollSection" style="display:none; margin-top: 30px;">
+                        <h3>Pending Payments</h3>
+                        <div id="payrollTable" class="data-table"></div>
+                        <button onclick="markAllPaid()" class="btn-success">Mark All as Paid</button>
+                    </div>
+
+                    <div class="payment-settings" style="margin-top: 40px;">
+                        <h3>Payment Methods Configuration</h3>
+                        <div class="form-group">
+                            <label>Naira Account Details</label>
+                            <textarea id="nairaDetails" placeholder="Bank: &#10;Account Number: &#10;Account Name:"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>USD SWIFT Details</label>
+                            <textarea id="usdDetails"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>USDT TRC20 Address</label>
+                            <input type="text" id="usdtAddress">
+                        </div>
+                        <button onclick="savePaymentSettings()" class="btn-primary">Save Settings</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staff Manager Section -->
+            <section id="staff" class="gm-section">
+                <div class="container">
+                    <h2>Staff Management</h2>
+                    <div class="staff-form">
+                        <h3>Create New Staff Access</h3>
+                        <form id="staffForm">
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="staffRole" required>
+                                    <option value="regional_admin">Regional Admin</option>
+                                    <option value="support">Support</option>
+                                    <option value="support_admin">Support Admin</option>
+                                    <option value="assistant_manager">Assistant Manager</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="staffEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="staffName" required>
+                            </div>
+                            <div class="form-group" id="stateGroup">
+                                <label>Assigned State</label>
+                                <select id="staffState">
+                                    <option value="">Select State</option>
+                                    <option value="Lagos">Lagos</option>
+                                    <option value="Abuja">Abuja</option>
+                                    <option value="Rivers">Rivers</option>
+                                    <option value="Kano">Kano</option>
+                                    <option value="Delta">Delta</option>
+                                    <option value="Oyo">Oyo</option>
+                                    <option value="Enugu">Enugu</option>
+                                    <option value="Kaduna">Kaduna</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Generate Access</button>
+                        </form>
+                    </div>
+                    <div id="staffList" class="data-table" style="margin-top: 30px;"></div>
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="services" class="gm-section">
+                <div class="container">
+                    <h2>Service Manager</h2>
+                    <button onclick="showServiceForm()" class="btn-primary">+ Add New Service</button>
+                    
+                    <div id="serviceForm" style="display:none; margin: 20px 0; padding: 20px; background: #f8fafc; border-radius: 8px;">
+                        <form id="newServiceForm">
+                            <div class="form-group">
+                                <label>Service Name</label>
+                                <input type="text" id="newServiceName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="newServiceType">
+                                    <option value="fixed">Fixed Price</option>
+                                    <option value="quotation">Quotation Based</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="priceGroup">
+                                <label>Price (₦)</label>
+                                <input type="number" id="newServicePrice">
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="text" id="newServiceImage" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="newServiceDesc" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Service</button>
+                            <button type="button" onclick="hideServiceForm()" class="btn-secondary">Cancel</button>
+                        </form>
+                    </div>
+                    
+                    <div id="servicesList" class="data-table" style="margin-top: 20px;"></div>
+                </div>
+            </section>
+
+            <!-- Platform Content Section -->
+            <section id="content" class="gm-section">
+                <div class="container">
+                    <h2>Platform Content</h2>
+                    <div class="content-tabs">
+                        <button onclick="showContentTab('announcements')" class="tab-btn active">Announcements</button>
+                        <button onclick="showContentTab('banners')" class="tab-btn">Homepage Banners</button>
+                        <button onclick="showContentTab('emails')" class="tab-btn">Email Templates</button>
+                    </div>
+                    
+                    <div id="contentEditor" class="content-editor">
+                        <textarea id="contentText" rows="10" placeholder="Enter content here..."></textarea>
+                        <button onclick="saveContent()" class="btn-primary">Publish</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Logs Section -->
+            <section id="logs" class="gm-section">
+                <div class="container">
+                    <h2>System Health Logs</h2>
+                    <div id="logsList" class="data-table"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
+    <script>
+        // GM Access Key - In production, this should be hashed/encrypted
+        const GM_ACCESS_KEY = 'DIGSNAT_GM_' + new Date().getFullYear() + '_SECURE';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already authenticated
+            const gmSession = sessionStorage.getItem('gm_auth');
+            if (gmSession === 'true') {
+                showDashboard();
+            }
+        });
+
+        function checkAccess() {
+            const input = document.getElementById('accessKey').value;
+            if (input === GM_ACCESS_KEY) {
+                sessionStorage.setItem('gm_auth', 'true');
+                showDashboard();
+            } else {
+                document.getElementById('accessError').textContent = 'Invalid access code';
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('accessOverlay').style.display = 'none';
+            document.getElementById('gmDashboard').style.display = 'block';
+            loadGMData();
+        }
+
+        async function loadGMData() {
+            // Load overview stats
+            const { count: totalJobs } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' });
+
+            const { data: revenue } = await supabaseClient
+                .from('jobs')
+                .select('price')
+                .eq('status', 'completed');
+
+            const totalRevenue = revenue?.reduce((sum, j) => sum + (j.price || 0), 0) || 0;
+
+            const { count: activeWorkers } = await supabaseClient
+                .from('workers')
+                .select('*', { count: 'exact' })
+                .eq('status', 'active');
+
+            const { count: pendingDisputes } = await supabaseClient
+                .from('disputes')
+                .select('*', { count: 'exact' })
+                .eq('status', 'pending');
+
+            document.getElementById('totalJobs').textContent = totalJobs || 0;
+            document.getElementById('totalRevenue').textContent = '₦' + totalRevenue.toLocaleString();
+            document.getElementById('activeWorkers').textContent = activeWorkers || 0;
+            document.getElementById('pendingDisputes').textContent = pendingDisputes || 0;
+
+            // Load jobs
+            loadAllJobs();
+            loadWorkers();
+            loadCustomers();
+            loadStaff();
+            loadServices();
+            loadLogs();
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.gm-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function loadAllJobs() {
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*, services(name), customers(email), workers(full_name)')
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('allJobsList');
+            container.innerHTML = createTable([
+                'ID', 'Service', 'Customer', 'Worker', 'Status', 'Price', 'Date', 'Actions'
+            ], jobs?.map(j => [
+                j.id.slice(0, 8),
+                j.services?.name,
+                j.customers?.email,
+                j.workers?.full_name || 'Unassigned',
+                `<span class="status-badge ${j.status}">${j.status}</span>`,
+                '₦' + (j.price || 0).toLocaleString(),
+                new Date(j.created_at).toLocaleDateString(),
+                `<button onclick="viewJob('${j.id}')" class="btn-small">View</button>`
+            ]) || []);
+        }
+
+        async function loadWorkers() {
+            const { data: workers } = await supabaseClient
+                .from('workers')
+                .select('*, ratings(rating)');
+
+            const container = document.getElementById('workersList');
+            container.innerHTML = createTable([
+                'Name', 'Email', 'State', 'Status', 'Rating', 'Actions'
+            ], workers?.map(w => {
+                const avgRating = w.ratings?.length 
+                    ? (w.ratings.reduce((a, r) => a + r.rating, 0) / w.ratings.length).toFixed(1)
+                    : 'N/A';
+                return [
+                    w.full_name,
+                    w.email,
+                    w.state,
+                    w.status,
+                    '⭐ ' + avgRating,
+                    `<button onclick="toggleWorker('${w.id}', '${w.status}')" class="btn-small">${w.status === 'active' ? 'Deactivate' : 'Activate'}</button>`
+                ];
+            }) || []);
+        }
+
+        async function loadCustomers() {
+            const { data: customers } = await supabaseClient
+                .from('customers')
+                .select('*');
+
+            const container = document.getElementById('customersList');
+            container.innerHTML = createTable([
+                'Email', 'Verified', 'Jobs', 'Joined', 'Actions'
+            ], customers?.map(c => [
+                c.email,
+                c.verified ? '✓' : '✗',
+                'View',
+                new Date(c.created_at).toLocaleDateString(),
+                `<button onclick="viewCustomer('${c.id}')" class="btn-small">Details</button>`
+            ]) || []);
+        }
+
+        async function generatePayroll() {
+            const { data: pendingPayments } = await supabaseClient
+                .from('jobs')
+                .select('*, workers(full_name, email), services(name)')
+                .eq('status', 'completed')
+                .eq('paid', false);
+
+            const container = document.getElementById('payrollTable');
+            document.getElementById('payrollSection').style.display = 'block';
+            
+            container.innerHTML = createTable([
+                'Worker', 'Service', 'Amount', 'Worker Earnings (70%)', 'Actions'
+            ], pendingPayments?.map(p => [
+                p.workers?.full_name,
+                p.services?.name,
+                '₦' + p.price?.toLocaleString(),
+                '₦' + Math.floor(p.price * 0.7).toLocaleString(),
+                `<button onclick="copyPayment('${p.workers?.email}', ${Math.floor(p.price * 0.7)})" class="btn-small">Copy</button>`
+            ]) || []);
+        }
+
+        function copyPayment(email, amount) {
+            navigator.clipboard.writeText(`Pay ${email}: ₦${amount.toLocaleString()}`);
+            alert('Payment details copied!');
+        }
+
+        async function markAllPaid() {
+            await supabaseClient
+                .from('jobs')
+                .update({ paid: true, paid_at: new Date().toISOString() })
+                .eq('status', 'completed')
+                .eq('paid', false);
+            
+            alert('All marked as paid');
+            generatePayroll();
+        }
+
+        document.getElementById('staffForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const role = document.getElementById('staffRole').value;
+            const state = document.getElementById('staffState').value;
+            
+            if ((role === 'regional_admin' || role === 'support') && !state) {
+                alert('State is required for this role');
+                return;
+            }
+
+            const token = 'STAFF_' + Math.random().toString(36).substring(2, 15).toUpperCase();
+            
+            const { data, error } = await supabaseClient.from('staff').insert([{
+                role: role,
+                email: document.getElementById('staffEmail').value,
+                full_name: document.getElementById('staffName').value,
+                state: state || null,
+                access_token: token,
+                status: 'active',
+                created_by: 'GM'
+            }]);
+
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                alert('Staff access created! Token: ' + token);
+                loadStaff();
+                this.reset();
+            }
+        });
+
+        async function loadStaff() {
+            const { data: staff } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('staffList');
+            container.innerHTML = createTable([
+                'Role', 'Name', 'Email', 'State', 'Status', 'Token'
+            ], staff?.map(s => [
+                s.role,
+                s.full_name,
+                s.email,
+                s.state || 'N/A',
+                s.status,
+                s.access_token
+            ]) || []);
+        }
+
+        function showServiceForm() {
+            document.getElementById('serviceForm').style.display = 'block';
+        }
+
+        function hideServiceForm() {
+            document.getElementById('serviceForm').style.display = 'none';
+        }
+
+        document.getElementById('newServiceType').addEventListener('change', function() {
+            document.getElementById('priceGroup').style.display = 
+                this.value === 'fixed' ? 'block' : 'none';
+        });
+
+        document.getElementById('newServiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const { error } = await supabaseClient.from('services').insert([{
+                name: document.getElementById('newServiceName').value,
+                type: document.getElementById('newServiceType').value,
+                price: document.getElementById('newServicePrice').value || null,
+                image: document.getElementById('newServiceImage').value,
+                description: document.getElementById('newServiceDesc').value,
+                active: true
+            }]);
+
+            if (!error) {
+                alert('Service added!');
+                hideServiceForm();
+                loadServices();
+            }
+        });
+
+        async function loadServices() {
+            const { data: services } = await supabaseClient
+                .from('services')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('servicesList');
+            container.innerHTML = createTable([
+                'Name', 'Type', 'Price', 'Status', 'Actions'
+            ], services?.map(s => [
+                s.name,
+                s.type,
+                s.price ? '₦' + s.price.toLocaleString() : 'Quotation',
+                s.active ? 'Active' : 'Inactive',
+                `<button onclick="toggleService('${s.id}', ${!s.active})" class="btn-small">${s.active ? 'Deactivate' : 'Activate'}</button>
+                 <button onclick="deleteService('${s.id}')" class="btn-small btn-danger">Delete</button>`
+            ]) || []);
+        }
+
+        async function loadLogs() {
+            const { data: logs } = await supabaseClient
+                .from('logs')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            const container = document.getElementById('logsList');
+            container.innerHTML = createTable([
+                'Time', 'Action', 'Status', 'Details'
+            ], logs?.map(l => [
+                new Date(l.created_at).toLocaleString(),
+                l.action,
+                `<span class="status-badge ${l.status.toLowerCase()}">${l.status}</span>`,
+                l.details || '-'
+            ]) || []);
+        }
+
+        function createTable(headers, rows) {
+            if (!rows || rows.length === 0) return '<p class="empty">No data</p>';
+            
+            let html = '<table class="data-table"><thead><tr>';
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+            
+            rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => html += `<td>${cell}</td>`);
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function logoutGM() {
+            sessionStorage.removeItem('gm_auth');
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
+

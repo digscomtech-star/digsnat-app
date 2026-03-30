@@ -1,33 +1,478 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Customer Booking</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - DigsNat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="container">
+            <h1>My Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn-notification" id="notifBtn">🔔 <span class="badge" id="notifCount">0</span></button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
 
-<h2>Complete Your Booking</h2>
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Verification Section (Shown if not verified) -->
+        <section class="verification-section" id="verifySection">
+            <div class="container">
+                <h2>Complete Verification</h2>
+                
+                <!-- ID Upload (Optional) -->
+                <div class="verify-step">
+                    <h3>Step 1: ID Upload (Optional)</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="noIdCheck"> I do not have an ID
+                    </label>
+                    <div id="idUploadArea" class="upload-area">
+                        <input type="file" id="idUpload" accept="image/*">
+                        <p>Upload ID Document</p>
+                    </div>
+                </div>
 
-<div id="verification">
-  <h3>Verification</h3>
-  <input id="name" placeholder="Full Name" />
-  <input type="file" id="idUpload" />
- <video id="camera" width="250" autoplay></video>
-<button onclick="captureFace()">Capture Face</button>
-<canvas id="canvas" style="display:none;"></canvas>
-  <button onclick="verifyUser()">Verify</button>
-</div>
+                <!-- Face Verification (Mandatory) -->
+                <div class="verify-step">
+                    <h3>Step 2: Face Verification (Required)</h3>
+                    <div class="camera-container">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <div class="camera-controls">
+                            <button onclick="switchCamera()" class="btn-secondary">Switch Camera 🔄</button>
+                            <button onclick="captureFace()" class="btn-primary">Capture Photo 📸</button>
+                        </div>
+                    </div>
+                    <div id="capturePreview"></div>
+                </div>
 
-<hr>
+                <button onclick="completeVerification()" class="btn-primary btn-full">Complete Verification</button>
+            </div>
+        </section>
 
-<h3>Book a Job</h3>
-<input id="service" placeholder="Service" />
-<input id="desc" placeholder="Description" />
-<input id="region" placeholder="Region" />
-<input id="price" placeholder="Price" />
-<button id="submitJobBtn">Submit Job</button>
-<script src="config.js"></script>
-<script src="app.js"></script>
+        <!-- Booking Section (Shown after verification) -->
+        <section class="booking-section" id="bookingSection" style="display:none;">
+            <div class="container">
+                <h2>Book a Service</h2>
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label>Select Service</label>
+                        <select id="serviceSelect" required>
+                            <option value="">Choose a service...</option>
+                        </select>
+                    </div>
 
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>State</label>
+                            <select id="stateSelect" required>
+                                <option value="">Select State</option>
+                                <option value="Lagos">Lagos</option>
+                                <option value="Abuja">Abuja</option>
+                                <option value="Rivers">Rivers</option>
+                                <option value="Kano">Kano</option>
+                                <option value="Delta">Delta</option>
+                                <option value="Oyo">Oyo</option>
+                                <option value="Enugu">Enugu</option>
+                                <option value="Kaduna">Kaduna</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>LGA</label>
+                            <input type="text" id="lgaInput" placeholder="Enter LGA" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Job Description</label>
+                        <textarea id="jobDesc" rows="4" placeholder="Describe what you need..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Image (Required)</label>
+                        <input type="file" id="jobImage" accept="image/*" required>
+                        <p class="hint">Take a photo of the issue or area</p>
+                    </div>
+
+                    <div class="job-type-toggle">
+                        <label>
+                            <input type="radio" name="jobType" value="fixed" checked> Fixed Price Job
+                        </label>
+                        <label>
+                            <input type="radio" name="jobType" value="quotation"> Request Quotation
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-full">Submit Job Request</button>
+                </form>
+
+                <!-- Job History -->
+                <div class="history-section">
+                    <h3>My Jobs</h3>
+                    <div id="jobHistory"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Chat Modal -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content chat-modal">
+            <div class="chat-header">
+                <h3>Chat</h3>
+                <span class="close-btn" onclick="closeChat()">&times;</span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal" id="ratingModal">
+        <div class="modal-content">
+            <h3>Rate Your Experience</h3>
+            <div class="star-rating" id="starRating">
+                <span onclick="setRating(1)">⭐</span>
+                <span onclick="setRating(2)">⭐</span>
+                <span onclick="setRating(3)">⭐</span>
+                <span onclick="setRating(4)">⭐</span>
+                <span onclick="setRating(5)">⭐</span>
+            </div>
+            <textarea id="ratingComment" placeholder="Optional comment..."></textarea>
+            <button onclick="submitRating()" class="btn-primary">Submit Rating</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
+    <script>
+        let currentStream = null;
+        let facingMode = 'user';
+        let currentRating = 0;
+        let currentJobId = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            if (!session || session.role !== 'customer') {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            await checkVerificationStatus();
+            loadServices();
+            loadJobHistory();
+            startNotificationPolling();
+        });
+
+        async function checkVerificationStatus() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const { data: customer } = await supabaseClient
+                .from('customers')
+                .select('verified')
+                .eq('id', session.id)
+                .single();
+
+            if (customer && customer.verified) {
+                document.getElementById('verifySection').style.display = 'none';
+                document.getElementById('bookingSection').style.display = 'block';
+            } else {
+                initCamera();
+            }
+        }
+
+        async function initCamera() {
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facingMode }
+                });
+                document.getElementById('video').srcObject = currentStream;
+            } catch (err) {
+                alert('Camera access required for verification');
+            }
+        }
+
+        function switchCamera() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            initCamera();
+        }
+
+        function captureFace() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            const preview = document.getElementById('capturePreview');
+            preview.innerHTML = '<p>Photo captured ✓</p>';
+            window.capturedFace = canvas.toDataURL('image/jpeg');
+        }
+
+        async function completeVerification() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const noId = document.getElementById('noIdCheck').checked;
+            
+            if (!window.capturedFace) {
+                alert('Please capture your photo');
+                return;
+            }
+
+            // Upload face image
+            const faceFile = dataURLtoFile(window.capturedFace, 'face.jpg');
+            const { data: faceUpload, error: faceError } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`${session.id}/face.jpg`, faceFile);
+
+            let idUpload = null;
+            if (!noId) {
+                const idFile = document.getElementById('idUpload').files[0];
+                if (idFile) {
+                    const { data } = await supabaseClient
+                        .storage
+                        .from('verifications')
+                        .upload(`${session.id}/id.jpg`, idFile);
+                    idUpload = data;
+                }
+            }
+
+            // Update customer record
+            await supabaseClient
+                .from('customers')
+                .update({ 
+                    verified: true,
+                    face_verified: true,
+                    id_verified: !noId,
+                    verified_at: new Date().toISOString()
+                })
+                .eq('id', session.id);
+
+            alert('Verification complete!');
+            document.getElementById('verifySection').style.display = 'none';
+            document.getElementById('bookingSection').style.display = 'block';
+        }
+
+        async function loadServices() {
+            const { data: services } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('active', true);
+            
+            const select = document.getElementById('serviceSelect');
+            services.forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = `${service.name} (${service.type === 'fixed' ? '₦' + service.price?.toLocaleString() : 'Quotation'})`;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const serviceId = document.getElementById('serviceSelect').value;
+            const jobType = document.querySelector('input[name="jobType"]:checked').value;
+            const imageFile = document.getElementById('jobImage').files[0];
+
+            // Check active job limit
+            const { count } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' })
+                .eq('customer_id', session.id)
+                .in('status', ['pending', 'accepted', 'in_progress']);
+
+            if (count >= 3) {
+                alert('You have too many active jobs. Please complete some first.');
+                return;
+            }
+
+            // Upload job image
+            const { data: imageData } = await supabaseClient
+                .storage
+                .from('job_images')
+                .upload(`${Date.now()}_${imageFile.name}`, imageFile);
+
+            const { data: service } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('id', serviceId)
+                .single();
+
+            const jobData = {
+                customer_id: session.id,
+                service_id: serviceId,
+                state: document.getElementById('stateSelect').value,
+                lga: document.getElementById('lgaInput').value,
+                description: document.getElementById('jobDesc').value,
+                image_url: imageData?.path,
+                type: jobType,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            };
+
+            if (jobType === 'fixed' && service.price) {
+                jobData.price = service.price;
+            }
+
+            const { data: job, error } = await supabaseClient
+                .from('jobs')
+                .insert([jobData])
+                .select()
+                .single();
+
+            if (error) {
+                alert('Error creating job: ' + error.message);
+            } else {
+                // Create notification for regional admin
+                await createNotificationForAdmins(job);
+                alert('Job submitted successfully!');
+                loadJobHistory();
+                this.reset();
+            }
+        });
+
+        async function loadJobHistory() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*, services(name), workers(full_name)')
+                .eq('customer_id', session.id)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('jobHistory');
+            container.innerHTML = '';
+
+            if (jobs && jobs.length > 0) {
+                jobs.forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-card';
+                    card.innerHTML = `
+                        <div class="job-header">
+                            <h4>${job.services?.name || 'Service'}</h4>
+                            <span class="status ${job.status}">${job.status}</span>
+                        </div>
+                        <p>${job.description}</p>
+                        ${job.price ? `<p class="price">₦${job.price.toLocaleString()}</p>` : ''}
+                        ${job.quotation_price ? `
+                            <div class="quotation-box">
+                                <p>Worker Quote: ₦${job.quotation_price.toLocaleString()}</p>
+                                <button onclick="acceptQuotation('${job.id}')" class="btn-small">Accept</button>
+                                <button onclick="bargainQuotation('${job.id}')" class="btn-small btn-secondary">Bargain (-5%)</button>
+                            </div>
+                        ` : ''}
+                        ${job.status === 'completed' ? `
+                            <button onclick="openRating('${job.id}')" class="btn-small">Rate Worker</button>
+                        ` : ''}
+                        <button onclick="openChat('${job.id}', '${job.worker_id}')" class="btn-small btn-chat">Chat</button>
+                        <button onclick="openDispute('${job.id}')" class="btn-small btn-dispute">Report Issue</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p class="empty">No jobs yet</p>';
+            }
+        }
+
+        async function acceptQuotation(jobId) {
+            await supabaseClient
+                .from('jobs')
+                .update({ status: 'accepted', price: currentJob.quotation_price })
+                .eq('id', jobId);
+            loadJobHistory();
+        }
+
+        async function bargainQuotation(jobId) {
+            const { data: job } = await supabaseClient
+                .from('jobs')
+                .select('quotation_price')
+                .eq('id', jobId)
+                .single();
+            
+            const newPrice = job.quotation_price * 0.95; // 5% off
+            await supabaseClient
+                .from('jobs')
+                .update({ quotation_price: newPrice, bargain_count: supabaseClient.raw('bargain_count + 1') })
+                .eq('id', jobId);
+            
+            loadJobHistory();
+        }
+
+        function openRating(jobId) {
+            currentJobId = jobId;
+            document.getElementById('ratingModal').style.display = 'flex';
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('#starRating span');
+            stars.forEach((star, index) => {
+                star.style.opacity = index < rating ? '1' : '0.3';
+            });
+        }
+
+        async function submitRating() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            const { data: job } = await supabaseClient
+                .from('jobs')
+                .select('worker_id')
+                .eq('id', currentJobId)
+                .single();
+
+            await supabaseClient.from('ratings').insert([{
+                job_id: currentJobId,
+                worker_id: job.worker_id,
+                customer_id: session.id,
+                rating: currentRating,
+                comment: document.getElementById('ratingComment').value
+            }]);
+
+            document.getElementById('ratingModal').style.display = 'none';
+            alert('Rating submitted!');
+        }
+
+        function openDispute(jobId) {
+            const reason = prompt('Describe the issue:');
+            if (reason) {
+                supabaseClient.from('disputes').insert([{
+                    job_id: jobId,
+                    user_id: JSON.parse(localStorage.getItem('user_session')).id,
+                    reason: reason,
+                    status: 'pending'
+                }]);
+                alert('Dispute reported. Admin will review.');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user_session');
+            window.location.href = '/index.html';
+        }
+
+        // Helper function
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, {type:mime});
+        }
+    </script>
 </body>
 </html>

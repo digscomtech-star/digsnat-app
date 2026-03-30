@@ -1,23 +1,150 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>DigsNat Services</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigsNat Services - Nigeria's Premier Service Platform</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo">
+                <h1>🇳🇬 DigsNat</h1>
+            </div>
+            <nav class="main-nav">
+                <a href="/apply.html" class="btn-apply">Become a Worker</a>
+            </nav>
+        </div>
+    </header>
 
-<h1>DigsNat Services</h1>
+    <!-- Hero Section with Sliding Services -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Professional Services at Your Doorstep</h2>
+            <p>Connect with verified experts across Nigeria</p>
+        </div>
+        
+        <!-- Auto-scrolling Service Grid -->
+        <div class="services-slider-container">
+            <div class="services-slider" id="servicesSlider">
+                <!-- Services injected by JS -->
+            </div>
+        </div>
+    </section>
 
-<h3>Book a Service</h3>
+    <!-- Marketplace Section -->
+    <section class="marketplace">
+        <div class="container">
+            <h3>Installation Packages & Devices</h3>
+            <div class="product-grid" id="productGrid">
+                <!-- Products injected by JS -->
+            </div>
+        </div>
+    </section>
 
-<input id="email" placeholder="Enter your email" />
-<button id="continueBtn">Continue</button>
-  
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="config.js"></script>
-<script src="app.js"></script>
+    <!-- Service Selection Modal -->
+    <div class="modal" id="serviceModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Book Service</h3>
+            <div id="selectedServiceInfo"></div>
+            <form id="emailForm">
+                <input type="email" id="customerEmail" placeholder="Enter your email" required>
+                <button type="submit" class="btn-primary">Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2026 DigsNat Services. Proudly Nigerian 🇳🇬</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
+    <script>
+        // Homepage specific script
+        document.addEventListener('DOMContentLoaded', function() {
+            loadServicesForHomepage();
+            checkExistingSession();
+        });
+
+        async function loadServicesForHomepage() {
+            const { data: services } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('active', true);
+            
+            const slider = document.getElementById('servicesSlider');
+            
+            if (services && services.length > 0) {
+                services.forEach(service => {
+                    const card = document.createElement('div');
+                    card.className = 'service-card';
+                    card.innerHTML = `
+                        <div class="service-image">
+                            <img src="${service.image || '/placeholder-service.jpg'}" alt="${service.name}">
+                        </div>
+                        <h4>${service.name}</h4>
+                        <span class="tag ${service.type}">${service.type === 'fixed' ? 'Fixed Price' : 'Quotation'}</span>
+                        ${service.type === 'fixed' ? `<p class="price">₦${service.price?.toLocaleString()}</p>` : ''}
+                    `;
+                    card.onclick = () => openServiceModal(service);
+                    slider.appendChild(card);
+                });
+                
+                // Auto-scroll animation
+                startAutoScroll();
+            }
+        }
+
+        function startAutoScroll() {
+            const slider = document.getElementById('servicesSlider');
+            let scrollAmount = 0;
+            
+            setInterval(() => {
+                scrollAmount += 1;
+                if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
+                    scrollAmount = 0;
+                }
+                slider.scrollLeft = scrollAmount;
+            }, 50);
+        }
+
+        function openServiceModal(service) {
+            document.getElementById('selectedServiceInfo').innerHTML = `
+                <h4>${service.name}</h4>
+                <p>${service.description || 'Professional service delivered to your location'}</p>
+            `;
+            document.getElementById('serviceModal').style.display = 'flex';
+            window.selectedService = service;
+        }
+
+        function closeModal() {
+            document.getElementById('serviceModal').style.display = 'none';
+        }
+
+        document.getElementById('emailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('customerEmail').value;
+            localStorage.setItem('customer_email', email);
+            window.location.href = '/customer.html';
+        });
+
+        function checkExistingSession() {
+            const session = JSON.parse(localStorage.getItem('user_session'));
+            if (session && session.role === 'customer') {
+                // Auto-redirect to customer dashboard
+                window.location.href = '/customer.html';
+            }
+        }
+    </script>
 </body>
 </html>

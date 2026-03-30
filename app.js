@@ -1,290 +1,217 @@
-// ==========================
-// INIT BUTTON (MAIN PAGE)
-// ==========================
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("continueBtn");
+// ============================================
+// DIGSNAT MAIN APPLICATION
+// ============================================
 
-  if (btn) {
-    btn.addEventListener("click", startBooking);
-  }
-});
+// Global state management
+const App = {
+    user: null,
+    session: null,
+    
+    init() {
+        this.restoreSession();
+        this.setupEventListeners();
+    },
 
-// ==========================
-// START BOOKING (INDEX PAGE)
-// ==========================
-async function startBooking() {
-  try {
-    const email = document.getElementById("email").value;
-
-    if (!email) {
-      alert("Please enter your email");
-      return;
-    }
-
-    // Save email locally
-    localStorage.setItem("customer_email", email);
-
-    // Redirect
-    window.location.href = "customer.html";
-  } catch (err) {
-    console.error("Start booking error:", err);
-    alert("Something went wrong");
-  }
-}
-
-// ==========================
-// VERIFY USER (UPLOAD ID + FACE)
-// ==========================
-async function verifyUser() {
-  try {
-    const email = localStorage.getItem("customer_email");
-    const name = document.getElementById("name").value;
-    const idFile = document.getElementById("idUpload").files[0];
-
-    if (!email || !name || !idFile || !capturedImage) {
-      alert("Complete all fields and capture face");
-      return;
-    }
-
-    // Upload ID
-    const idPath = "ids/" + Date.now() + "_" + idFile.name;
-    const { error: idError } = await supabase.storage
-      .from("user-ids")
-      .upload(idPath, idFile);
-
-    if (idError) throw idError;
-
-    // Upload Face
-    const facePath = "faces/" + Date.now() + "_face.jpg";
-    const { error: faceError } = await supabase.storage
-      .from("user-faces")
-      .upload(facePath, capturedImage);
-
-    if (faceError) throw faceError;
-
-    // Save user
-    const { error } = await supabase.from("users").insert([
-      {
-        email,
-        full_name: name,
-        role: "customer",
-        id_image: idPath,
-        face_image: facePath,
-        verified: true
-      }
-    ]);
-
-    if (error) throw error;
-
-    alert("Verification successful!");
-
-  } catch (err) {
-    console.error(err);
-    alert("Verification failed: " + err.message);
-  }
-}
-
-// ==========================
-// CREATE JOB + AUTO ASSIGN
-// ==========================
-async function createJob() {
-  try {
-    const email = localStorage.getItem("customer_email");
-
-    if (!email) {
-      alert("Session expired. Please start again.");
-      window.location.href = "index.html";
-      return;
-    }
-
-    const service = document.getElementById("service").value;
-    const description = document.getElementById("desc").value;
-    const region = document.getElementById("region").value;
-    const price = document.getElementById("price").value;
-
-    if (!service || !description || !region || !price) {
-      alert("Please fill all job details");
-      return;
-    }
-
-    // Get user
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
-
-    if (userError) throw userError;
-    if (!user) {
-      alert("User not found. Please verify first.");
-      return;
-    }
-
-    // Create job
-    const { data: job, error: jobError } = await supabase
-      .from("jobs")
-      .insert([
-        {
-          customer_id: user.id,
-          service,
-          description,
-          region,
-          price
+    restoreSession() {
+        const session = JSON.parse(localStorage.getItem('user_session'));
+        if (session) {
+            this.session = session;
+            this.user = session;
         }
-      ])
-      .select()
-      .single();
+    },
 
-    if (jobError) throw jobError;
+    setupEventListeners() {
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+    },
 
-    // Auto assign worker
-    const { error: assignError } = await supabase.rpc("auto_assign_worker", {
-      job_uuid: job.id
-    });
+    // Session persistence for PWA
+    persistSession(userData) {
+        localStorage.setItem('user_session', JSON.stringify({
+            ...userData,
+            timestamp: new Date().toISOString()
+        }));
+    },
 
-    if (assignError) throw assignError;
+    clearSession() {
+        localStorage.removeItem('user_session');
+        this.user = null;
+        this.session = null;
+    },
 
-    alert("Job submitted & worker assigned!");
+    // Check if user is authenticated
+    isAuthenticated() {
+        return !!this.session;
+    },
 
-  } catch (err) {
-    console.error("Job creation error:", err);
-    alert("Error: " + err.message);
-  }
-}
-async function createJob() {
-  const email = localStorage.getItem("customer_email");
+    // Get current user role
+    getRole() {
+        return this.session?.role || null;
+    }
+};
 
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .single();
-
-  const { data: job } = await supabase
-    .from("jobs")
-    .insert([
-      {
-        customer_id: user.id,
-        service: document.getElementById("service").value,
-        description: document.getElementById("desc").value,
-        region: document.getElementById("region").value,
-        price: document.getElementById("price").value
-      }
-    ])
-    .select()
-    .single();
-
-  // 🔥 CALL AUTO ASSIGN FUNCTION
-  await supabase.rpc("auto_assign_worker", {
-    job_uuid: job.id
-  });
-
-  alert("Job submitted & worker assigned!");
-}
-
-async function workerLogin() {
-  const email = document.getElementById("workerEmail").value;
-
-  if (!email) {
-    alert("Enter email");
-    return;
-  }
-
-  const { data: user } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .eq("role", "worker")
-    .maybeSingle();
-
-  if (!user) {
-    alert("Worker not found");
-    return;
-  }
-
-  localStorage.setItem("worker_id", user.id);
-
-  document.getElementById("workerDashboard").style.display = "block";
-
-  loadWorkerJobs();
-}
-
-async function loadWorkerJobs() {
-  const workerId = localStorage.getItem("worker_id");
-
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("assigned_to", workerId)
-    .neq("status", "completed");
-
-  const container = document.getElementById("jobs");
-  container.innerHTML = "";
-
-  jobs.forEach(job => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <hr>
-      <p><b>Service:</b> ${job.service}</p>
-      <p><b>Description:</b> ${job.description}</p>
-      <p><b>Region:</b> ${job.region}</p>
-
-      <button onclick="rejectJob('${job.id}')">Reject</button>
-      <button onclick="markDone('${job.id}')">Mark Done</button>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-async function rejectJob(jobId) {
-  await supabase.rpc("reject_worker", {
-    job_uuid: jobId
-  });
-
-  alert("Job rejected. Assigning new worker...");
-  loadWorkerJobs();
-}
-
-async function markDone(jobId) {
-  await supabase.rpc("worker_mark_done", {
-    job_uuid: jobId
-  });
-
-  alert("Marked as done. Awaiting customer confirmation.");
-  loadWorkerJobs();
-}
-
-let capturedImage = null;
-
-// START CAMERA
-navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
-    document.getElementById("camera").srcObject = stream;
-  });
-
-// CAPTURE FACE
-function captureFace() {
-  const video = document.getElementById("camera");
-  const canvas = document.getElementById("canvas");
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
-
-  canvas.toBlob(blob => {
-    capturedImage = blob;
-    alert("Face captured!");
-  }, "image/jpeg");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const jobBtn = document.getElementById("submitJobBtn");
-
-  if (jobBtn) {
-    jobBtn.addEventListener("click", createJob);
-  }
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    App.init();
 });
+
+// ============================================
+// SECURITY HELPERS
+// ============================================
+
+// Sanitize input to prevent XSS
+function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+// Validate email format
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Validate Nigerian phone number
+function isValidPhone(phone) {
+    return /^(\+234|0)[789][01]\d{8}$/.test(phone.replace(/\s/g, ''));
+}
+
+// ============================================
+// IMAGE HANDLING
+// ============================================
+
+async function compressImage(file, maxWidth = 1200, quality = 0.8) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', quality);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================
+// OFFLINE SUPPORT
+// ============================================
+
+const OfflineStore = {
+    async save(key, data) {
+        localStorage.setItem(`offline_${key}`, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    },
+
+    async get(key) {
+        const item = localStorage.getItem(`offline_${key}`);
+        return item ? JSON.parse(item).data : null;
+    },
+
+    async clear(key) {
+        localStorage.removeItem(`offline_${key}`);
+    }
+};
+
+// Queue actions when offline
+const ActionQueue = {
+    async add(action) {
+        const queue = JSON.parse(localStorage.getItem('action_queue') || '[]');
+        queue.push({
+            ...action,
+            id: Date.now(),
+            retries: 0
+        });
+        localStorage.setItem('action_queue', JSON.stringify(queue));
+    },
+
+    async process() {
+        if (!navigator.onLine) return;
+        
+        const queue = JSON.parse(localStorage.getItem('action_queue') || '[]');
+        if (queue.length === 0) return;
+
+        const remaining = [];
+        
+        for (const action of queue) {
+            try {
+                // Process based on action type
+                await processQueuedAction(action);
+            } catch (error) {
+                action.retries++;
+                if (action.retries < 3) {
+                    remaining.push(action);
+                }
+            }
+        }
+
+        localStorage.setItem('action_queue', JSON.stringify(remaining));
+    }
+};
+
+async function processQueuedAction(action) {
+    // Implementation depends on action type
+    console.log('Processing queued action:', action);
+}
+
+// Listen for online status
+window.addEventListener('online', () => {
+    console.log('Back online - processing queue');
+    ActionQueue.process();
+});
+
+// ============================================
+// ERROR HANDLING
+// ============================================
+
+window.onerror = function(msg, url, line, col, error) {
+    console.error('Global error:', { msg, url, line, col, error });
+    
+    // Log to Supabase
+    if (typeof supabaseClient !== 'undefined') {
+        supabaseClient.from('logs').insert([{
+            action: 'CLIENT_ERROR',
+            status: 'ERROR',
+            details: `${msg} at ${url}:${line}`,
+            created_at: new Date().toISOString()
+        });
+    }
+    
+    return false;
+};
+
+// ============================================
+// PERFORMANCE MONITORING
+// ============================================
+
+if ('PerformanceObserver' in window) {
+    const perfObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+            console.log(`[Performance] ${entry.name}: ${entry.duration}ms`);
+        }
+    });
+    perfObserver.observe({ entryTypes: ['measure', 'navigation'] });
+}

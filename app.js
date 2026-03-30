@@ -269,3 +269,27 @@ async function markDone(jobId) {
   loadWorkerJobs();
 }
 
+let capturedImage = null;
+
+// START CAMERA
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    document.getElementById("camera").srcObject = stream;
+  });
+
+// CAPTURE FACE
+function captureFace() {
+  const video = document.getElementById("camera");
+  const canvas = document.getElementById("canvas");
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
+
+  canvas.toBlob(blob => {
+    capturedImage = blob;
+    alert("Face captured!");
+  }, "image/jpeg");
+}

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - DigsNat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="container">
+            <h1 id="dashboardTitle">Staff Dashboard</h1>
+            <div class="header-actions">
+                <span id="staffRoleBadge" class="role-badge"></span>
+                <button class="btn-notification" id="notifBtn">
+                    🔔 <span class="badge" id="notifCount">0</span>
+                </button>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Ads Section -->
+            <div class="ads-section" id="staffAds"></div>
+
+            <!-- Stats -->
+            <div class="stats-grid" id="staffStats"></div>
+
+            <!-- Role-Specific Content -->
+            <div id="roleContent"></div>
+
+            <!-- Common: Announcements -->
+            <section class="dashboard-section">
+                <h3>Platform Announcements</h3>
+                <div id="announcementsList"></div>
+            </section>
+
+            <!-- Common: Refer & Earn -->
+            <section class="dashboard-section">
+                <h3>Refer & Earn</h3>
+                <div class="referral-box">
+                    <p>Earn ₦2,000 for every customer or worker you refer!</p>
+                    <div class="referral-link-box">
+                        <input type="text" id="referralLink" readonly>
+                        <button onclick="copyReferral()" class="btn-primary">Copy</button>
+                    </div>
+                    <div class="share-buttons">
+                        <button onclick="shareWhatsApp()" class="btn-whatsapp">WhatsApp</button>
+                        <button onclick="shareFacebook()" class="btn-facebook">Facebook</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Chat Modal -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content chat-modal">
+            <div class="chat-header">
+                <h3>Support Chat</h3>
+                <span class="close-btn" onclick="closeChat()">&times;</span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script>
+        let staffSession = null;
+        let currentRole = null;
+        let chatInterval = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                alert('Access required');
+                window.location.href = '/';
+                return;
+            }
+            
+            const { data: staff } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .eq('access_token', token)
+                .eq('status', 'active')
+                .single();
+            
+            if (!staff) {
+                alert('Invalid access or account not activated');
+                window.location.href = '/';
+                return;
+            }
+            
+            staffSession = staff;
+            currentRole = staff.role;
+            
+            localStorage.setItem('digsnat_staff_session', JSON.stringify(staff));
+            
+            initializeDashboard();
+        });
+
+        async function initializeDashboard() {
+            // Set role badge
+            const roleNames = {
+                'regional_admin': 'Regional Admin',
+                'support': 'Support',
+                'support_admin': 'Support Admin',
+                'assistant_manager': 'Assistant Manager'
+            };
+            
+            document.getElementById('staffRoleBadge').textContent = roleNames[currentRole];
+            document.getElementById('dashboardTitle').textContent = `Welcome, ${staffSession.full_name?.split(' ')[0] || 'Staff'}`;
+            
+            // Setup referral
+            const referralLink = `${window.location.origin}/?ref=${btoa(staffSession.id).replace(/=/g, '')}`;
+            document.getElementById('referralLink').value = referralLink;
+            
+            // Load ads
+            await loadAds();
+            
+            // Load role-specific content
+            await loadRoleContent();
+            
+            // Load announcements
+            await loadAnnouncements();
+            
+            // Start notifications
+            startNotifications();
+        }
+
+        async function loadAds() {
+            const { data: ads } = await supabaseClient
+                .from('advertisements')
+                .select('*')
+                .eq('active', true)
+                .in('placement', ['staff', 'all']);
+            
+            const container = document.getElementById('staffAds');
+            if (ads && ads.length > 0) {
+                container.innerHTML = ads.map(ad => `
+                    <div class="ad-banner">
+                        <a href="${getAdLink(ad)}" onclick="trackAdClick('${ad.id}')">
+                            <img src="${ad.image_url}" alt="${ad.title}">
+                        </a>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadRoleContent() {
+            const container = document.getElementById('roleContent');
+            const statsContainer = document.getElementById('staffStats');
+            
+            switch(currentRole) {
+                case 'regional_admin':
+                    await loadRegionalAdminContent(container, statsContainer);
+                    break;
+                case 'support':
+                case 'support_admin':
+                    await loadSupportContent(container, statsContainer);
+                    break;
+                case 'assistant_manager':
+                    await loadAssistantManagerContent(container, statsContainer);
+                    break;
+            }
+        }
+
+        async function loadRegionalAdminContent(container, statsContainer) {
+            // Stats
+            const { count: pendingJobs } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' })
+                .eq('state', staffSession.state)
+                .eq('status', 'pending');
+            
+            const { count: activeJobs } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' })
+                .eq('state', staffSession.state)
+                .in('status', ['accepted', 'in_progress']);
+            
+            const { count: pendingWorkers } = await supabaseClient
+                .from('workers')
+                .select('*', { count: 'exact' })
+                .eq('state', staffSession.state)
+                .eq('status', 'pending');
+            
+            const { count: disputes } = await supabaseClient
+                .from('disputes')
+                .select('*', { count: 'exact' })
+                .eq('status', 'pending');
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card"><h3>Pending Jobs</h3><p>${pendingJobs || 0}</p></div>
+                <div class="stat-card"><h3>Active Jobs</h3><p>${activeJobs || 0}</p></div>
+                <div class="stat-card"><h3>Pending Workers</h3><p>${pendingWorkers || 0}</p></div>
+                <div class="stat-card"><h3>Open Disputes</h3><p>${disputes || 0}</p></div>
+            `;
+            
+            // Content
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*, services(name), customers(full_name)')
+                .eq('state', staffSession.state)
+                .in('status', ['pending', 'disputed'])
+                .order('created_at', { ascending: false });
+            
+            container.innerHTML = `
+                <section class="dashboard-section">
+                    <h3>Jobs Requiring Attention (${staffSession.state})</h3>
+                    <div class="data-table">
+                        ${jobs?.map(j => `
+                            <div class="job-row">
+                                <span>${j.services?.name}</span>
+                                <span>${j.customers?.full_name}</span>
+                                <span class="status-badge ${j.status}">${j.status}</span>
+                                <button onclick="viewJob('${j.id}')" class="btn-small">View</button>
+                            </div>
+                        `).join('') || '<p>No pending jobs</p>'}
+                    </div>
+                </section>
+                
+                <section class="dashboard-section">
+                    <h3>Worker Verifications</h3>
+                    <button onclick="viewPendingWorkers()" class="btn-primary">Review Pending Workers</button>
+                </section>
+            `;
+        }
+
+        async function loadSupportContent(container, statsContainer) {
+            const { count: openTickets } = await supabaseClient
+                .from('support_tickets')
+                .select('*', { count: 'exact' })
+                .eq('status', 'open');
+            
+            const { count: myTickets } = await supabaseClient
+                .from('support_tickets')
+                .select('*', { count: 'exact' })
+                .eq('assigned_to', staffSession.id)
+                .eq('status', 'in_progress');
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card"><h3>Open Tickets</h3><p>${openTickets || 0}</p></div>
+                <div class="stat-card"><h3>My Tickets</h3><p>${myTickets || 0}</p></div>
+            `;
+            
+            container.innerHTML = `
+                <section class="dashboard-section">
+                    <h3>Support Tickets</h3>
+                    <button onclick="viewTickets()" class="btn-primary">View All Tickets</button>
+                </section>
+            `;
+        }
+
+        async function loadAssistantManagerContent(container, statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="stat-card"><h3>Content Pieces</h3><p>-</p></div>
+                <div class="stat-card"><h3>Active Ads</h3><p>-</p></div>
+            `;
+            
+            container.innerHTML = `
+                <section class="dashboard-section">
+                    <h3>Content Management</h3>
+                    <p class="coming-soon-overlay">
+                        <span>Access GM dashboard for full content control</span>
+                    </p>
+                </section>
+            `;
+        }
+
+        async function loadAnnouncements() {
+            const { data: announcements } = await supabaseClient
+                .from('announcements')
+                .select('*')
+                .in('target', ['all', 'staff'])
+                .order('created_at', { ascending: false })
+                .limit(5);
+            
+            document.getElementById('announcementsList').innerHTML = announcements?.map(a => `
+                <div class="announcement-item">
+                    <p>${a.content}</p>
+                    <small>${new Date(a.created_at).toLocaleString()}</small>
+                </div>
+            `).join('') || '<p>No announcements</p>';
+        }
+
+        function copyReferral() {
+            const link = document.getElementById('referralLink');
+            link.select();
+            document.execCommand('copy');
+            alert('Referral link copied!');
+        }
+
+        function shareWhatsApp() {
+            const link = document.getElementById('referralLink').value;
+            const text = `Join DigsNat - professional services platform: ${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        }
+
+        function shareFacebook() {
+            const link = document.getElementById('referralLink').value;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`);
+        }
+
+        async function startNotifications() {
+            fetchNotifications();
+            setInterval(fetchNotifications, 5000);
+        }
+
+        async function fetchNotifications() {
+            const { data: notifs } = await supabaseClient
+                .from('notifications')
+                .select('*')
+                .eq('user_id', staffSession.id)
+                .eq('read', false);
+            
+            const badge = document.getElementById('notifCount');
+            badge.textContent = notifs?.length || 0;
+            badge.style.display = notifs?.length > 0 ? 'flex' : 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('digsnat_staff_session');
+            window.location.href = '/';
+        }
+
+        function getAdLink(ad) {
+            switch(ad.link_type) {
+                case 'landing': return '/';
+                case 'service': return `/?service=${ad.link_target}`;
+                case 'apply_worker': return '/apply-worker.html';
+                case 'apply_staff': return '/apply-staff.html';
+                case 'custom': return ad.link_target;
+                default: return '/';
+            }
+        }
+
+        async function trackAdClick(adId) {
+            await supabaseClient.rpc('increment_ad_click', { ad_id: adId });
+        }
+    </script>
+</body>
+</html>

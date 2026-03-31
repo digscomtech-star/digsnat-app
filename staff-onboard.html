@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Staff Profile - DigsNat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="onboard-page">
+    <div class="onboard-container">
+        <div class="onboard-card">
+            <div class="onboard-header">
+                <h1>Welcome to DigsNat Staff</h1>
+                <p>Complete your profile setup to access your dashboard</p>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-step active" id="step1Indicator">1. Personal Info</div>
+                <div class="progress-step" id="step2Indicator">2. Verification</div>
+                <div class="progress-step" id="step3Indicator">3. Account Details</div>
+            </div>
+
+            <!-- Step 1: Personal Info -->
+            <div class="onboard-step active" id="step1">
+                <h2>Personal Information</h2>
+                <form id="personalForm">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="onboardName" required placeholder="As on your ID">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date of Birth *</label>
+                            <input type="date" id="onboardDob" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender *</label>
+                            <select id="onboardGender" required>
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Residential Address *</label>
+                        <textarea id="onboardAddress" rows="3" required placeholder="Your current address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Emergency Contact *</label>
+                        <input type="text" id="onboardEmergency" required placeholder="Name and phone number">
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Continue to Verification</button>
+                </form>
+            </div>
+
+            <!-- Step 2: Verification -->
+            <div class="onboard-step" id="step2">
+                <h2>Identity Verification</h2>
+                <p>Required for platform security and access authorization</p>
+                
+                <div class="verify-section">
+                    <h4>ID Document *</h4>
+                    <div class="id-options">
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="national_id" checked> National ID
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="drivers_license"> Driver's License
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="passport"> International Passport
+                        </label>
+                    </div>
+                    <div class="upload-area" id="idUploadArea">
+                        <input type="file" id="idPhoto" accept="image/*" capture="environment" hidden>
+                        <p>📷 Tap to capture ID photo</p>
+                        <small>Must show name, photo, and ID number clearly</small>
+                    </div>
+                    <div id="idPreview"></div>
+                </div>
+
+                <div class="verify-section">
+                    <h4>Face Verification *</h4>
+                    <div class="camera-container">
+                        <video id="faceVideo" autoplay playsinline></video>
+                        <canvas id="faceCanvas" style="display:none;"></canvas>
+                        <div class="camera-overlay">
+                            <div class="face-guide"></div>
+                            <p>Position face in circle</p>
+                        </div>
+                    </div>
+                    <div class="camera-controls">
+                        <button onclick="switchCamera()" class="btn-secondary">🔄 Switch</button>
+                        <button onclick="captureFace()" class="btn-primary">📸 Capture</button>
+                    </div>
+                    <div id="facePreview"></div>
+                </div>
+
+                <button onclick="goToStep(3)" class="btn-primary btn-full" id="verifyContinue" disabled>Continue</button>
+            </div>
+
+            <!-- Step 3: Account Details -->
+            <div class="onboard-step" id="step3">
+                <h2>Account & Payment Details</h2>
+                
+                <div class="form-section">
+                    <h4>Login Credentials</h4>
+                    <div class="form-group">
+                        <label>Create Password *</label>
+                        <input type="password" id="onboardPassword" required minlength="8" placeholder="Minimum 8 characters">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password *</label>
+                        <input type="password" id="onboardPasswordConfirm" required placeholder="Re-enter password">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Bank Account for Salary *</h4>
+                    <div class="form-group">
+                        <label>Bank Name *</label>
+                        <input type="text" id="bankName" required placeholder="e.g., GTBank">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Number *</label>
+                        <input type="text" id="accountNumber" required maxlength="10" placeholder="10 digits">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Name *</label>
+                        <input type="text" id="accountName" required placeholder="As on bank record">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Additional Payment (Optional)</h4>
+                    <div class="form-group">
+                        <label>USDT TRC20 Address (Optional)</label>
+                        <input type="text" id="usdtAddress" placeholder="For crypto payments">
+                    </div>
+                </div>
+
+                <button onclick="completeOnboarding()" class="btn-primary btn-full btn-large">Complete Setup</button>
+            </div>
+
+            <div class="onboard-complete" id="onboardComplete" style="display:none;">
+                <div class="success-icon">✓</div>
+                <h2>Setup Complete!</h2>
+                <p>Your staff profile is now active. Redirecting to your dashboard...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script>
+        let staffSession = null;
+        let currentStep = 1;
+        let faceStream = null;
+        let faceMode = 'user';
+        let capturedFace = null;
+        let capturedId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            
+            // Check for token in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                alert('Invalid access. Please use your invitation link.');
+                window.location.href = '/';
+                return;
+            }
+            
+            // Validate token
+            const { data: staff } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .eq('access_token', token)
+                .eq('status', 'invited')
+                .single();
+            
+            if (!staff) {
+                alert('Invalid or expired invitation. Please contact GM.');
+                window.location.href = '/';
+                return;
+            }
+            
+            staffSession = staff;
+            
+            // Pre-fill if application data exists
+            const { data: application } = await supabaseClient
+                .from('staff_applications')
+                .select('*')
+                .eq('email', staff.email)
+                .order('applied_at', { ascending: false })
+                .limit(1)
+                .single();
+            
+            if (application) {
+                document.getElementById('onboardName').value = application.full_name || '';
+            }
+            
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('personalForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                savePersonalInfo();
+            });
+            
+            document.getElementById('idUploadArea').addEventListener('click', () => {
+                document.getElementById('idPhoto').click();
+            });
+            
+            document.getElementById('idPhoto').addEventListener('change', handleIdCapture);
+            
+            initCamera();
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.onboard-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
+            
+            document.getElementById(`step${step}`).classList.add('active');
+            for (let i = 1; i <= step; i++) {
+                document.getElementById(`step${i}Indicator`).classList.add('active');
+            }
+            
+            currentStep = step;
+            
+            if (step === 2) {
+                initCamera();
+            }
+        }
+
+        async function savePersonalInfo() {
+            const personalData = {
+                full_name: document.getElementById('onboardName').value,
+                date_of_birth: document.getElementById('onboardDob').value,
+                gender: document.getElementById('onboardGender').value,
+                address: document.getElementById('onboardAddress').value,
+                emergency_contact: document.getElementById('onboardEmergency').value,
+                onboarding_step: 2
+            };
+            
+            await supabaseClient
+                .from('staff')
+                .update(personalData)
+                .eq('id', staffSession.id);
+            
+            goToStep(2);
+        }
+
+        async function initCamera() {
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: faceMode }
+                });
+                document.getElementById('faceVideo').srcObject = faceStream;
+            } catch (err) {
+                console.log('Camera error:', err);
+            }
+        }
+
+        function switchCamera() {
+            faceMode = faceMode === 'user' ? 'environment' : 'user';
+            if (faceStream) faceStream.getTracks().forEach(t => t.stop());
+            initCamera();
+        }
+
+        function captureFace() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            capturedFace = canvas.toDataURL('image/jpeg');
+            document.getElementById('facePreview').innerHTML = '<p class="success-text">✓ Face captured</p>';
+            checkComplete();
+        }
+
+        function handleIdCapture(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('idPreview').innerHTML = `
+                    <img src="${e.target.result}" style="max-width:100%;border-radius:8px;">
+                    <p class="success-text">✓ ID captured</p>
+                `;
+                capturedId = file;
+                checkComplete();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function checkComplete() {
+            if (capturedFace && capturedId) {
+                document.getElementById('verifyContinue').disabled = false;
+            }
+        }
+
+        async function goToStep3() {
+            // Upload verification files
+            const idType = document.querySelector('input[name="idType"]:checked').value;
+            
+            const { data: idUp } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`staff/${staffSession.id}/id_${Date.now()}.jpg`, capturedId);
+            
+            const faceFile = dataURLtoFile(capturedFace, 'face.jpg');
+            const { data: faceUp } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`staff/${staffSession.id}/face_${Date.now()}.jpg`, faceFile);
+            
+            await supabaseClient
+                .from('staff')
+                .update({
+                    id_type: idType,
+                    id_image_url: idUp.path,
+                    face_image_url: faceUp.path,
+                    verified: true,
+                    onboarding_step: 3
+                })
+                .eq('id', staffSession.id);
+            
+            goToStep(3);
+        }
+
+        async function completeOnboarding() {
+            // Validate passwords
+            const pwd = document.getElementById('onboardPassword').value;
+            const pwdConfirm = document.getElementById('onboardPasswordConfirm').value;
+            
+            if (pwd !== pwdConfirm) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            if (pwd.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+            
+            // Save all account data
+            const accountData = {
+                password_hash: await hashPassword(pwd), // In production, hash properly
+                bank_name: document.getElementById('bankName').value,
+                account_number: document.getElementById('accountNumber').value,
+                account_name: document.getElementById('accountName').value,
+                usdt_address: document.getElementById('usdtAddress').value || null,
+                status: 'active',
+                onboarding_complete: true,
+                onboarding_completed_at: new Date().toISOString()
+            };
+            
+            await supabaseClient
+                .from('staff')
+                .update(accountData)
+                .eq('id', staffSession.id);
+            
+            // Create staff wallet
+            await supabaseClient.from('wallets').insert([{
+                user_id: staffSession.id,
+                user_type: 'staff',
+                balance: 0
+            }]);
+            
+            // Show success
+            document.getElementById('step3').style.display = 'none';
+            document.querySelector('.progress-bar').style.display = 'none';
+            document.getElementById('onboardComplete').style.display = 'block';
+            
+            // Redirect after delay
+            setTimeout(() => {
+                window.location.href = `/staff-dashboard.html?token=${staffSession.access_token}`;
+            }, 3000);
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, {type:mime});
+        }
+
+        async function hashPassword(password) {
+            // Simple hash for demo - use proper bcrypt/argon2 in production
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+    </script>
+</body>
+</html>

@@ -3,148 +3,1848 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DigsNat Services - Nigeria's Premier Service Platform</title>
+    <title>DigsNat - Nigeria's Premier Service Marketplace</title>
+    <meta name="description" content="Connect with verified service professionals across Nigeria">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
+    
+    <!-- Dynamic OG Tags for Social Sharing -->
+    <meta property="og:title" content="DigsNat - Professional Services at Your Doorstep">
+    <meta property="og:description" content="Connect with verified experts across Nigeria">
+    <meta property="og:image" content="/og-image.jpg">
+    <meta property="og:url" content="https://digsnat.com">
+    
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+    <!-- PWA Install Banner (Persistent until installed) -->
+    <div id="pwaBanner" class="pwa-banner" style="display:none;">
+        <div class="container">
+            <span>📱 Install DigsNat for easy booking & tracking</span>
+            <button onclick="installPWA()" class="btn-install">Install Now</button>
+            <button onclick="dismissPWA()" class="btn-dismiss">×</button>
+        </div>
+    </div>
+
     <!-- Header -->
-    <header class="main-header">
+    <header class="main-header" id="mainHeader">
         <div class="container">
             <div class="logo">
                 <h1>🇳🇬 DigsNat</h1>
             </div>
-            <nav class="main-nav">
-                <a href="/apply.html" class="btn-apply">Become a Worker</a>
+            <nav class="main-nav" id="mainNav">
+                <a href="#services" class="nav-link">Services</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <button onclick="openAuthModal()" class="btn-auth" id="authBtn">Sign In / Sign Up</button>
+                <div class="user-menu" id="userMenu" style="display:none;">
+                    <span id="userName"></span>
+                    <button onclick="logout()" class="btn-logout-sm">Logout</button>
+                </div>
             </nav>
         </div>
     </header>
 
-    <!-- Hero Section with Sliding Services -->
+    <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <h2>Professional Services at Your Doorstep</h2>
-            <p>Connect with verified experts across Nigeria</p>
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h2 id="heroTitle">Professional Services at Your Doorstep</h2>
+                <p id="heroSubtitle">Connect with verified experts across Nigeria</p>
+                <div class="hero-cta">
+                    <a href="#services" class="btn-primary btn-large">Explore Services</a>
+                    <button onclick="openAuthModal()" class="btn-secondary btn-large" id="heroAuthBtn">Get Started</button>
+                </div>
+            </div>
         </div>
         
-        <!-- Auto-scrolling Service Grid -->
-        <div class="services-slider-container">
-            <div class="services-slider" id="servicesSlider">
-                <!-- Services injected by JS -->
-            </div>
+        <!-- Auto-scrolling Service Carousel -->
+        <div class="services-carousel-container">
+            <div class="services-carousel" id="servicesCarousel"></div>
+            <button class="carousel-btn prev" onclick="moveCarousel(-1)">‹</button>
+            <button class="carousel-btn next" onclick="moveCarousel(1)">›</button>
         </div>
     </section>
 
-    <!-- Marketplace Section -->
-    <section class="marketplace">
+    <!-- Stats Banner -->
+    <section class="stats-banner">
         <div class="container">
-            <h3>Installation Packages & Devices</h3>
-            <div class="product-grid" id="productGrid">
-                <!-- Products injected by JS -->
+            <div class="stats-flex">
+                <div class="stat-item">
+                    <span class="stat-number" id="statWorkers">500+</span>
+                    <span class="stat-label">Verified Workers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statJobs">10k+</span>
+                    <span class="stat-label">Jobs Completed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statStates">36</span>
+                    <span class="stat-label">States Covered</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statRating">4.8</span>
+                    <span class="stat-label">Average Rating</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Service Selection Modal -->
-    <div class="modal" id="serviceModal">
+    <!-- Services Grid Section -->
+    <section class="marketplace" id="services">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Services</h2>
+                <p>Browse and book professional services</p>
+            </div>
+            <div class="services-grid" id="servicesGrid"></div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Choose a Service</h3>
+                    <p>Browse our categories and select what you need</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Book Instantly</h3>
+                    <p>Sign up with email and book in minutes</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Get It Done</h3>
+                    <p>A verified professional arrives at your location</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Pay Securely</h3>
+                    <p>Pay after job completion. Satisfaction guaranteed</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Advertisement Section (Dynamic) -->
+    <section class="ad-section" id="adSection">
+        <div class="container">
+            <div class="ad-carousel" id="adCarousel"></div>
+        </div>
+    </section>
+
+    <!-- Customer Dashboard (Hidden until auth) -->
+    <section class="customer-dashboard" id="customerDashboard" style="display:none;">
+        <div class="container">
+            <div class="dashboard-layout">
+                <!-- Sidebar -->
+                <aside class="dashboard-sidebar">
+                    <div class="user-profile-card">
+                        <div class="avatar" id="userAvatar"></div>
+                        <h3 id="dashboardUserName"></h3>
+                        <p id="dashboardUserEmail"></p>
+                        <div class="wallet-mini" id="walletMini">
+                            <span>Wallet: ₦<span id="walletBalance">0</span></span>
+                        </div>
+                    </div>
+                    <nav class="dashboard-nav">
+                        <button onclick="showDashSection('bookings')" class="dash-nav-btn active">My Bookings</button>
+                        <button onclick="showDashSection('wallet')" class="dash-nav-btn">My Wallet</button>
+                        <button onclick="showDashSection('referrals')" class="dash-nav-btn">Refer & Earn</button>
+                        <button onclick="showDashSection('verify')" class="dash-nav-btn" id="verifyNavBtn">Verification</button>
+                        <button onclick="showDashSection('support')" class="dash-nav-btn">Support</button>
+                    </nav>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="dashboard-main-content">
+                    <!-- Bookings Section -->
+                    <div class="dash-section active" id="dashBookings">
+                        <div class="section-header">
+                            <h2>My Bookings</h2>
+                            <button onclick="showBookingFlow()" class="btn-primary">+ New Booking</button>
+                        </div>
+                        <div class="bookings-list" id="bookingsList"></div>
+                    </div>
+
+                    <!-- Wallet Section -->
+                    <div class="dash-section" id="dashWallet">
+                        <div class="wallet-card">
+                            <h3>My Wallet</h3>
+                            <div class="balance-large">₦<span id="mainWalletBalance">0</span></div>
+                            <p class="coming-soon-overlay" id="walletOverlay">
+                                <span>Auto-payments coming soon</span>
+                            </p>
+                            <div class="wallet-actions" id="walletActions" style="display:none;">
+                                <button class="btn-primary">Add Funds</button>
+                                <button class="btn-secondary">Withdraw</button>
+                            </div>
+                        </div>
+                        <div class="transaction-history" id="transactionHistory"></div>
+                    </div>
+
+                    <!-- Referrals Section -->
+                    <div class="dash-section" id="dashReferrals">
+                        <h2>Refer & Earn</h2>
+                        <div class="referral-card">
+                            <p>Earn ₦2,000 for every friend who completes their first booking!</p>
+                            <div class="referral-link-box">
+                                <input type="text" id="referralLink" readonly>
+                                <button onclick="copyReferral()" class="btn-primary">Copy Link</button>
+                            </div>
+                            <div class="share-buttons">
+                                <button onclick="shareWhatsApp()" class="btn-whatsapp">WhatsApp</button>
+                                <button onclick="shareFacebook()" class="btn-facebook">Facebook</button>
+                                <button onclick="shareTwitter()" class="btn-twitter">Twitter</button>
+                            </div>
+                        </div>
+                        <div class="referral-stats" id="referralStats"></div>
+                    </div>
+
+                    <!-- Verification Section -->
+                    <div class="dash-section" id="dashVerify">
+                        <h2>Identity Verification</h2>
+                        <div class="verify-status" id="verifyStatus"></div>
+                        <button onclick="openVerification()" class="btn-primary" id="startVerifyBtn">Complete Verification</button>
+                    </div>
+
+                    <!-- Support Section -->
+                    <div class="dash-section" id="dashSupport">
+                        <h2>Support</h2>
+                        <div class="chat-container" id="supportChat"></div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Detail Modal (for browsing without signup) -->
+    <div class="modal" id="serviceDetailModal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" onclick="closeModal('serviceDetailModal')">&times;</span>
+            <div class="service-detail" id="serviceDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Sign Up/In) -->
+    <div class="modal" id="authModal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3>Book Service</h3>
-            <div id="selectedServiceInfo"></div>
-            <form id="emailForm">
-                <input type="email" id="customerEmail" placeholder="Enter your email" required>
-                <button type="submit" class="btn-primary">Continue</button>
+            <span class="close-btn" onclick="closeModal('authModal')">&times;</span>
+            <div class="auth-tabs">
+                <button onclick="showAuthTab('signup')" class="auth-tab active" id="tabSignup">Sign Up</button>
+                <button onclick="showAuthTab('signin')" class="auth-tab" id="tabSignin">Sign In</button>
+            </div>
+            
+            <!-- Sign Up Form -->
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label>Full Legal Name *</label>
+                    <input type="text" id="signupName" placeholder="As it appears on your ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Referral Code (Optional)</label>
+                    <input type="text" id="referralCode" placeholder="If someone referred you">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="termsAgree" required>
+                        I agree to the Terms of Service and Privacy Policy
+                    </label>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Create Account</button>
             </form>
+
+            <!-- Sign In Form -->
+            <form id="signinForm" class="auth-form" style="display:none;">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="signinEmail" placeholder="your@email.com" required>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Verification Modal -->
+    <div class="modal" id="verifyEmailModal">
+        <div class="modal-content">
+            <h3>Verify Your Email</h3>
+            <p>We've sent a verification link to <span id="verifyEmailAddress"></span></p>
+            <p>Click the link in your email to continue.</p>
+            <button onclick="resendVerification()" class="btn-secondary">Resend Email</button>
+            <button onclick="checkVerification()" class="btn-primary">I've Verified</button>
+        </div>
+    </div>
+
+    <!-- PWA Install Modal (Post Signup) -->
+    <div class="modal" id="pwaModal">
+        <div class="modal-content text-center">
+            <div class="pwa-icon">📱</div>
+            <h3>Install DigsNat App</h3>
+            <p>Get easy access and track your bookings anytime</p>
+            <div class="pwa-benefits">
+                <div>✓ Instant booking access</div>
+                <div>✓ Real-time notifications</div>
+                <div>✓ Track your jobs offline</div>
+            </div>
+            <button onclick="installPWA()" class="btn-primary btn-full btn-large">Install Now</button>
+            <button onclick="skipPWA()" class="btn-text">Continue without installing</button>
+        </div>
+    </div>
+
+    <!-- Booking Flow Modal -->
+    <div class="modal" id="bookingFlowModal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" onclick="closeModal('bookingFlowModal')">&times;</span>
+            <div class="booking-flow">
+                <div class="flow-step active" id="step1">
+                    <h3>Select Service</h3>
+                    <div class="service-select-grid" id="bookingServiceGrid"></div>
+                </div>
+                <div class="flow-step" id="step2">
+                    <h3>Job Details</h3>
+                    <form id="bookingDetailsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>State *</label>
+                                <select id="bookingState" required>
+                                    <option value="">Select State</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>LGA *</label>
+                                <input type="text" id="bookingLGA" placeholder="Enter LGA" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="bookingDesc" rows="4" placeholder="Describe what you need..." required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload Photo *</label>
+                            <input type="file" id="bookingImage" accept="image/*" capture="environment" required>
+                            <p class="hint">Take a photo of the area/issue</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Job Type</label>
+                            <div class="job-type-display" id="jobTypeInfo"></div>
+                        </div>
+                    </form>
+                    <button onclick="proceedToVerification()" class="btn-primary btn-full">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Verification Modal -->
+    <div class="modal" id="kycModal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" onclick="closeModal('kycModal')">&times;</span>
+            <h3>Identity Verification</h3>
+            <p>Required for your security and our workers' safety</p>
+            
+            <div class="kyc-steps">
+                <!-- ID Verification -->
+                <div class="kyc-step" id="kycIdStep">
+                    <h4>Step 1: ID Verification</h4>
+                    <div class="id-options">
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="drivers_license" checked>
+                            Driver's License
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="national_id">
+                            National ID Card
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="passport">
+                            International Passport
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="voters_card">
+                            Voter's Card
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="idType" value="none">
+                            I don't have any ID
+                        </label>
+                    </div>
+                    
+                    <div id="idUploadSection">
+                        <div class="upload-area" id="idUploadArea">
+                            <input type="file" id="idPhoto" accept="image/*" capture="environment" hidden>
+                            <div class="upload-placeholder">
+                                <span>📷</span>
+                                <p>Tap to capture ID photo</p>
+                                <small>Must clearly show name, photo, and ID number</small>
+                            </div>
+                        </div>
+                        <div id="idPreview"></div>
+                        
+                        <div class="form-group" id="ninGroup">
+                            <label>NIN (National Identity Number)</label>
+                            <input type="text" id="ninNumber" placeholder="Enter 11-digit NIN">
+                        </div>
+                        <div class="form-group" id="bvnGroup">
+                            <label>BVN (Optional but recommended)</label>
+                            <input type="text" id="bvnNumber" placeholder="Enter 11-digit BVN">
+                        </div>
+                    </div>
+
+                    <div id="noIdSection" style="display:none;">
+                        <div class="alert alert-info">
+                            <p>Without ID, please provide:</p>
+                        </div>
+                        <div class="form-group">
+                            <label>NIN (Required without ID)</label>
+                            <input type="text" id="ninOnly" placeholder="Enter 11-digit NIN" maxlength="11">
+                        </div>
+                        <div class="form-group">
+                            <label>Utility Bill Photo (NEPA/Water)</label>
+                            <div class="upload-area" id="utilityUploadArea">
+                                <input type="file" id="utilityBill" accept="image/*" capture="environment" hidden>
+                                <p>📷 Capture utility bill showing your address</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Face Verification -->
+                <div class="kyc-step" id="kycFaceStep">
+                    <h4>Step 2: Face Verification (Required)</h4>
+                    <div class="camera-container">
+                        <video id="faceVideo" autoplay playsinline></video>
+                        <canvas id="faceCanvas" style="display:none;"></canvas>
+                        <div class="camera-overlay">
+                            <div class="face-guide"></div>
+                            <p>Position your face within the circle</p>
+                        </div>
+                    </div>
+                    <div class="camera-controls">
+                        <button onclick="switchCamera()" class="btn-secondary">🔄 Switch Camera</button>
+                        <button onclick="captureFace()" class="btn-primary">📸 Capture Photo</button>
+                    </div>
+                    <div id="facePreview"></div>
+                </div>
+            </div>
+
+            <button onclick="submitKYC()" class="btn-primary btn-full" id="submitKycBtn" disabled>Complete Verification</button>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content chat-modal">
+            <div class="chat-header">
+                <h3 id="chatTitle">Chat</h3>
+                <span class="close-btn" onclick="closeChat()">&times;</span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal" id="ratingModal">
+        <div class="modal-content">
+            <h3>Rate Your Experience</h3>
+            <div class="star-rating" id="starRating">
+                <span onclick="setRating(1)">⭐</span>
+                <span onclick="setRating(2)">⭐</span>
+                <span onclick="setRating(3)">⭐</span>
+                <span onclick="setRating(4)">⭐</span>
+                <span onclick="setRating(5)">⭐</span>
+            </div>
+            <textarea id="ratingComment" placeholder="Share your experience (optional)" rows="3"></textarea>
+            <button onclick="submitRating()" class="btn-primary btn-full">Submit Rating</button>
         </div>
     </div>
 
     <!-- Footer -->
     <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2026 DigsNat Services. Proudly Nigerian 🇳🇬</p>
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>🇳🇬 DigsNat</h3>
+                    <p>Nigeria's trusted service marketplace</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <a href="#services">Services</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#" onclick="showComingSoon()">Become a Worker</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <a href="#" onclick="showComingSoon()">Help Center</a>
+                    <a href="#" onclick="showComingSoon()">Contact Us</a>
+                    <a href="#" onclick="showComingSoon()">Safety</a>
+                </div>
+                <div class="footer-social">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon">FB</a>
+                        <a href="#" class="social-icon">IG</a>
+                        <a href="#" class="social-icon">TW</a>
+                        <a href="#" class="social-icon">LI</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 DigsNat Services. Proudly Nigerian 🇳🇬</p>
+            </div>
         </div>
     </footer>
 
+    <!-- Coming Soon Toast -->
+    <div id="comingSoonToast" class="toast">
+        <span>🚧 Coming Soon</span>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/config.js"></script>
-    <script src="/app.js"></script>
     <script>
-        // Homepage specific script
-        document.addEventListener('DOMContentLoaded', function() {
-            loadServicesForHomepage();
+        // ==========================================
+        // GLOBAL STATE
+        // ==========================================
+        let currentUser = null;
+        let currentService = null;
+        let currentBooking = null;
+        let faceStream = null;
+        let faceMode = 'user';
+        let capturedFace = null;
+        let capturedId = null;
+        let currentRating = 0;
+        let carouselIndex = 0;
+        let deferredPrompt = null;
+        let currentChatJob = null;
+        let chatInterval = null;
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            checkPWAStatus();
+            loadLandingPage();
             checkExistingSession();
+            setupEventListeners();
+            
+            // Show PWA banner after delay if not installed
+            setTimeout(() => showPWABanner(), 10000);
         });
 
-        async function loadServicesForHomepage() {
+        function setupEventListeners() {
+            // Forms
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            document.getElementById('signinForm').addEventListener('submit', handleSignin);
+            document.getElementById('bookingDetailsForm').addEventListener('submit', (e) => e.preventDefault());
+            
+            // ID upload
+            document.getElementById('idUploadArea').addEventListener('click', () => {
+                document.getElementById('idPhoto').click();
+            });
+            document.getElementById('idPhoto').addEventListener('change', handleIdCapture);
+            
+            // No ID toggle
+            document.querySelectorAll('input[name="idType"]').forEach(radio => {
+                radio.addEventListener('change', handleIdTypeChange);
+            });
+            
+            // Utility upload
+            document.getElementById('utilityUploadArea')?.addEventListener('click', () => {
+                document.getElementById('utilityBill').click();
+            });
+            
+            // Chat input
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+
+        // ==========================================
+        // LANDING PAGE (Public Tour)
+        // ==========================================
+        async function loadLandingPage() {
+            await loadHeroContent();
+            await loadServicesCarousel();
+            await loadServicesGrid();
+            await loadAdvertisements();
+            await loadStats();
+            populateStates();
+        }
+
+        async function loadHeroContent() {
+            // Load from GM content management
+            const { data: hero } = await supabaseClient
+                .from('content')
+                .select('*')
+                .eq('type', 'hero')
+                .eq('active', true)
+                .single();
+            
+            if (hero) {
+                document.getElementById('heroTitle').textContent = hero.title;
+                document.getElementById('heroSubtitle').textContent = hero.subtitle;
+                if (hero.background_image) {
+                    document.getElementById('heroBg').style.backgroundImage = `url(${hero.background_image})`;
+                }
+            }
+        }
+
+        async function loadServicesCarousel() {
             const { data: services } = await supabaseClient
                 .from('services')
                 .select('*')
-                .eq('active', true);
+                .eq('active', true)
+                .order('priority', { ascending: false })
+                .limit(5);
+
+            const carousel = document.getElementById('servicesCarousel');
+            carousel.innerHTML = '';
             
-            const slider = document.getElementById('servicesSlider');
-            
-            if (services && services.length > 0) {
-                services.forEach(service => {
-                    const card = document.createElement('div');
-                    card.className = 'service-card';
-                    card.innerHTML = `
-                        <div class="service-image">
-                            <img src="${service.image || '/placeholder-service.jpg'}" alt="${service.name}">
-                        </div>
+            services?.forEach((service, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide';
+                slide.style.transform = `translateX(${index * 100}%)`;
+                slide.innerHTML = `
+                    <div class="slide-image">
+                        <img src="${service.image_url || '/placeholder.jpg'}" alt="${service.name}" loading="lazy">
+                    </div>
+                    <div class="slide-content">
                         <h4>${service.name}</h4>
-                        <span class="tag ${service.type}">${service.type === 'fixed' ? 'Fixed Price' : 'Quotation'}</span>
-                        ${service.type === 'fixed' ? `<p class="price">₦${service.price?.toLocaleString()}</p>` : ''}
-                    `;
-                    card.onclick = () => openServiceModal(service);
-                    slider.appendChild(card);
-                });
-                
-                // Auto-scroll animation
-                startAutoScroll();
+                        <p>${service.description?.substring(0, 100) || ''}...</p>
+                        <div class="slide-footer">
+                            ${service.type === 'fixed' && service.price ? 
+                                `<span class="price">₦${service.price.toLocaleString()}</span>` : 
+                                `<span class="tag">Quotation Based</span>`
+                            }
+                            <button onclick="viewServiceDetail('${service.id}')" class="btn-view">View Details →</button>
+                        </div>
+                    </div>
+                `;
+                carousel.appendChild(slide);
+            });
+
+            // Auto-rotate
+            if (services?.length > 1) {
+                setInterval(() => moveCarousel(1), 5000);
             }
         }
 
-        function startAutoScroll() {
-            const slider = document.getElementById('servicesSlider');
-            let scrollAmount = 0;
+        async function loadServicesGrid() {
+            const { data: services } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('active', true)
+                .order('name');
+
+            const grid = document.getElementById('servicesGrid');
+            grid.innerHTML = '';
             
-            setInterval(() => {
-                scrollAmount += 1;
-                if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
-                    scrollAmount = 0;
-                }
-                slider.scrollLeft = scrollAmount;
-            }, 50);
+            services?.forEach(service => {
+                const card = document.createElement('div');
+                card.className = 'service-card';
+                card.innerHTML = `
+                    <div class="service-image">
+                        <img src="${service.image_url || '/placeholder.jpg'}" alt="${service.name}" loading="lazy">
+                        ${service.featured ? '<span class="featured-badge">Featured</span>' : ''}
+                    </div>
+                    <div class="service-content">
+                        <h4>${service.name}</h4>
+                        <p>${service.description?.substring(0, 80) || ''}...</p>
+                        <div class="service-footer">
+                            ${service.type === 'fixed' && service.price ? 
+                                `<span class="price">₦${service.price.toLocaleString()}</span>` : 
+                                `<span class="tag quotation">Custom Quote</span>`
+                            }
+                            <button onclick="viewServiceDetail('${service.id}')" class="btn-view">View →</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
         }
 
-        function openServiceModal(service) {
-            document.getElementById('selectedServiceInfo').innerHTML = `
-                <h4>${service.name}</h4>
-                <p>${service.description || 'Professional service delivered to your location'}</p>
+        async function loadAdvertisements() {
+            const { data: ads } = await supabaseClient
+                .from('advertisements')
+                .select('*')
+                .eq('active', true)
+                .eq('placement', 'landing')
+                .order('priority', { ascending: false });
+
+            const container = document.getElementById('adCarousel');
+            
+            if (ads && ads.length > 0) {
+                container.innerHTML = '';
+                ads.forEach(ad => {
+                    const adEl = document.createElement('div');
+                    adEl.className = 'ad-item';
+                    adEl.innerHTML = `
+                        <a href="${getAdLink(ad)}" onclick="trackAdClick('${ad.id}')">
+                            <img src="${ad.image_url}" alt="${ad.title}">
+                            <div class="ad-overlay">
+                                <h4>${ad.title}</h4>
+                                <p>${ad.subtitle || ''}</p>
+                            </div>
+                        </a>
+                    `;
+                    container.appendChild(adEl);
+                });
+            }
+        }
+
+        async function loadStats() {
+            // Real stats from database
+            const { count: workers } = await supabaseClient
+                .from('workers')
+                .select('*', { count: 'exact' })
+                .eq('status', 'active');
+            
+            const { count: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' })
+                .eq('status', 'completed');
+
+            document.getElementById('statWorkers').textContent = (workers || 0) + '+';
+            document.getElementById('statJobs').textContent = (jobs || 0).toLocaleString() + '+';
+        }
+
+        function moveCarousel(direction) {
+            const slides = document.querySelectorAll('.carousel-slide');
+            if (slides.length === 0) return;
+            
+            carouselIndex = (carouselIndex + direction + slides.length) % slides.length;
+            
+            slides.forEach((slide, index) => {
+                slide.style.transform = `translateX(${(index - carouselIndex) * 100}%)`;
+            });
+        }
+
+        // ==========================================
+        // SERVICE DETAIL (Public View)
+        // ==========================================
+        async function viewServiceDetail(serviceId) {
+            const { data: service } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('id', serviceId)
+                .single();
+
+            currentService = service;
+            
+            document.getElementById('serviceDetailContent').innerHTML = `
+                <div class="service-detail-layout">
+                    <div class="detail-image">
+                        <img src="${service.image_url || '/placeholder.jpg'}" alt="${service.name}">
+                    </div>
+                    <div class="detail-info">
+                        <h2>${service.name}</h2>
+                        <p class="detail-description">${service.description || ''}</p>
+                        ${service.type === 'fixed' && service.price ? 
+                            `<div class="detail-price">₦${service.price.toLocaleString()} <span>Fixed Price</span></div>` : 
+                            `<div class="detail-quote">Custom Quotation <span>Price determined after inspection</span></div>`
+                        }
+                        <div class="detail-features">
+                            <h4>What's Included:</h4>
+                            <ul>
+                                <li>✓ Verified professional workers</li>
+                                <li>✓ Quality service guarantee</li>
+                                <li>✓ Secure payment protection</li>
+                                <li>✓ 24/7 customer support</li>
+                            </ul>
+                        </div>
+                        <button onclick="initiateBooking('${service.id}')" class="btn-primary btn-large btn-full">
+                            Book This Service
+                        </button>
+                        <p class="detail-note">You'll need to sign up or sign in to complete booking</p>
+                    </div>
+                </div>
             `;
-            document.getElementById('serviceModal').style.display = 'flex';
-            window.selectedService = service;
+            
+            openModal('serviceDetailModal');
         }
 
-        function closeModal() {
-            document.getElementById('serviceModal').style.display = 'none';
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
+        function openAuthModal() {
+            openModal('authModal');
+            showAuthTab('signup');
         }
 
-        document.getElementById('emailForm').addEventListener('submit', function(e) {
+        function showAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.style.display = 'none');
+            
+            document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+            document.getElementById(`${tab}Form`).style.display = 'block';
+        }
+
+        async function handleSignup(e) {
             e.preventDefault();
-            const email = document.getElementById('customerEmail').value;
-            localStorage.setItem('customer_email', email);
-            window.location.href = '/customer.html';
-        });
+            
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+            const referralCode = document.getElementById('referralCode').value.trim();
+            
+            // Check if email exists
+            const { data: existing } = await supabaseClient
+                .from('customers')
+                .select('id')
+                .eq('email', email)
+                .single();
+            
+            if (existing) {
+                alert('Email already registered. Please sign in.');
+                showAuthTab('signin');
+                document.getElementById('signinEmail').value = email;
+                return;
+            }
+            
+            // Create customer
+            const { data: customer, error } = await supabaseClient
+                .from('customers')
+                .insert([{
+                    email: email,
+                    full_name: name,
+                    verified: false,
+                    email_verified: false,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+            
+            if (error) {
+                alert('Error creating account: ' + error.message);
+                return;
+            }
+            
+            // Handle referral
+            if (referralCode) {
+                await processReferral(referralCode, customer.id, 'customer');
+            }
+            
+            // Send verification email
+            await sendVerificationEmail(customer.id, email);
+            
+            // Show verification modal
+            document.getElementById('verifyEmailAddress').textContent = email;
+            closeModal('authModal');
+            openModal('verifyEmailModal');
+            
+            // Store pending session
+            localStorage.setItem('pending_user', JSON.stringify({
+                id: customer.id,
+                email: email,
+                name: name
+            }));
+        }
+
+        async function handleSignin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('signinEmail').value.trim().toLowerCase();
+            
+            const { data: customer } = await supabaseClient
+                .from('customers')
+                .select('*')
+                .eq('email', email)
+                .single();
+            
+            if (!customer) {
+                alert('Email not found. Please sign up.');
+                showAuthTab('signup');
+                document.getElementById('signupEmail').value = email;
+                return;
+            }
+            
+            if (!customer.email_verified) {
+                // Resend verification
+                await sendVerificationEmail(customer.id, email);
+                document.getElementById('verifyEmailAddress').textContent = email;
+                closeModal('authModal');
+                openModal('verifyEmailModal');
+                
+                localStorage.setItem('pending_user', JSON.stringify({
+                    id: customer.id,
+                    email: email,
+                    name: customer.full_name
+                }));
+                return;
+            }
+            
+            // Complete login
+            completeLogin(customer);
+        }
+
+        async function sendVerificationEmail(customerId, email) {
+            // Generate token
+            const token = btoa(`${customerId}:${Date.now()}`).replace(/=/g, '');
+            
+            await supabaseClient
+                .from('verification_tokens')
+                .insert([{
+                    customer_id: customerId,
+                    token: token,
+                    type: 'email',
+                    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                }]);
+            
+            // In production, this sends actual email
+            // For now, simulate with console/log
+            console.log('Verification link:', `${window.location.origin}/verify?token=${token}`);
+            
+            // Store in localStorage for demo (remove in production)
+            localStorage.setItem('verify_token', token);
+        }
+
+        async function checkVerification() {
+            const pending = JSON.parse(localStorage.getItem('pending_user'));
+            if (!pending) return;
+            
+            // Check if verified
+            const { data: customer } = await supabaseClient
+                .from('customers')
+                .select('*')
+                .eq('id', pending.id)
+                .single();
+            
+            if (customer?.email_verified) {
+                closeModal('verifyEmailModal');
+                completeLogin(customer);
+            } else {
+                alert('Email not yet verified. Please check your inbox and click the link.');
+            }
+        }
+
+        async function resendVerification() {
+            const pending = JSON.parse(localStorage.getItem('pending_user'));
+            if (pending) {
+                await sendVerificationEmail(pending.id, pending.email);
+                alert('Verification email resent!');
+            }
+        }
+
+        function completeLogin(customer) {
+            currentUser = {
+                id: customer.id,
+                email: customer.email,
+                name: customer.full_name,
+                role: 'customer',
+                verified: customer.verified,
+                pwa_installed: customer.pwa_installed || false
+            };
+            
+            localStorage.setItem('digsnat_session', JSON.stringify(currentUser));
+            localStorage.removeItem('pending_user');
+            
+            closeModal('verifyEmailModal');
+            
+            // Show PWA prompt if not installed
+            if (!currentUser.pwa_installed && deferredPrompt) {
+                setTimeout(() => openModal('pwaModal'), 500);
+            }
+            
+            showCustomerDashboard();
+        }
 
         function checkExistingSession() {
-            const session = JSON.parse(localStorage.getItem('user_session'));
+            const session = JSON.parse(localStorage.getItem('digsnat_session'));
             if (session && session.role === 'customer') {
-                // Auto-redirect to customer dashboard
-                window.location.href = '/customer.html';
+                currentUser = session;
+                showCustomerDashboard();
             }
         }
+
+        // ==========================================
+        // PWA HANDLING
+        // ==========================================
+        function checkPWAStatus() {
+            // Check if running as installed PWA
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                document.getElementById('pwaBanner').style.display = 'none';
+                if (currentUser) {
+                    updatePWAStatus(true);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show banner if not installed
+            if (!checkPWAStatus()) {
+                document.getElementById('pwaBanner').style.display = 'block';
+            }
+        });
+
+        function showPWABanner() {
+            if (!checkPWAStatus() && deferredPrompt) {
+                document.getElementById('pwaBanner').style.display = 'block';
+            }
+        }
+
+        async function installPWA() {
+            if (!deferredPrompt) {
+                // Show manual instructions
+                alert('To install: Tap menu (⋮) then "Add to Home Screen"');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                updatePWAStatus(true);
+                document.getElementById('pwaBanner').style.display = 'none';
+                closeModal('pwaModal');
+            }
+            
+            deferredPrompt = null;
+        }
+
+        function dismissPWA() {
+            document.getElementById('pwaBanner').style.display = 'none';
+            // Will show again in 24 hours
+            localStorage.setItem('pwa_dismissed', Date.now().toString());
+        }
+
+        function skipPWA() {
+            closeModal('pwaModal');
+        }
+
+        async function updatePWAStatus(installed) {
+            if (!currentUser) return;
+            
+            await supabaseClient
+                .from('customers')
+                .update({ pwa_installed: installed })
+                .eq('id', currentUser.id);
+            
+            currentUser.pwa_installed = installed;
+            localStorage.setItem('digsnat_session', JSON.stringify(currentUser));
+        }
+
+        // ==========================================
+        // CUSTOMER DASHBOARD
+        // ==========================================
+        async function showCustomerDashboard() {
+            // Hide landing, show dashboard
+            document.querySelector('.hero').style.display = 'none';
+            document.querySelector('.stats-banner').style.display = 'none';
+            document.querySelector('.marketplace').style.display = 'none';
+            document.querySelector('.how-it-works').style.display = 'none';
+            document.querySelector('.ad-section').style.display = 'none';
+            document.querySelector('.main-footer').style.display = 'none';
+            
+            document.getElementById('customerDashboard').style.display = 'block';
+            document.getElementById('mainHeader').classList.add('dashboard-header');
+            
+            // Update UI
+            document.getElementById('authBtn').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'flex';
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('dashboardUserName').textContent = currentUser.name;
+            document.getElementById('dashboardUserEmail').textContent = currentUser.email;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            
+            // Load wallet
+            await loadWallet();
+            
+            // Load bookings
+            await loadBookings();
+            
+            // Setup referral
+            setupReferral();
+            
+            // Check verification status
+            await checkVerificationStatus();
+            
+            // Start notifications
+            startNotifications();
+        }
+
+        function showDashSection(section) {
+            document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.dash-nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`dash${section.charAt(0).toUpperCase() + section.slice(1)}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ==========================================
+        // WALLET SYSTEM
+        // ==========================================
+        async function loadWallet() {
+            const { data: wallet } = await supabaseClient
+                .from('wallets')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('user_type', 'customer')
+                .single();
+            
+            const balance = wallet?.balance || 0;
+            document.getElementById('walletBalance').textContent = balance.toLocaleString();
+            document.getElementById('mainWalletBalance').textContent = balance.toLocaleString();
+            
+            // Check if auto-payment enabled
+            const { data: config } = await supabaseClient
+                .from('gm_config')
+                .select('auto_payment_enabled')
+                .eq('id', 'payment')
+                .single();
+            
+            if (config?.auto_payment_enabled) {
+                document.getElementById('walletOverlay').style.display = 'none';
+                document.getElementById('walletActions').style.display = 'flex';
+            }
+            
+            // Load transactions
+            const { data: transactions } = await supabaseClient
+                .from('wallet_transactions')
+                .select('*')
+                .eq('wallet_id', wallet?.id)
+                .order('created_at', { ascending: false })
+                .limit(10);
+            
+            const container = document.getElementById('transactionHistory');
+            if (transactions && transactions.length > 0) {
+                container.innerHTML = transactions.map(t => `
+                    <div class="transaction-item ${t.type}">
+                        <span class="trans-type">${t.type}</span>
+                        <span class="trans-amount">₦${t.amount.toLocaleString()}</span>
+                        <span class="trans-date">${new Date(t.created_at).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="empty">No transactions yet</p>';
+            }
+        }
+
+        // ==========================================
+        // BOOKING FLOW
+        // ==========================================
+        function showBookingFlow() {
+            // Populate services
+            const grid = document.getElementById('bookingServiceGrid');
+            grid.innerHTML = '';
+            
+            // Reuse services data or fetch fresh
+            supabaseClient.from('services').select('*').eq('active', true).then(({data}) => {
+                data?.forEach(service => {
+                    const item = document.createElement('div');
+                    item.className = 'service-select-item';
+                    item.innerHTML = `
+                        <img src="${service.image_url || '/placeholder.jpg'}" alt="${service.name}">
+                        <h4>${service.name}</h4>
+                        ${service.type === 'fixed' && service.price ? 
+                            `<span>₦${service.price.toLocaleString()}</span>` : 
+                            `<span>Custom Quote</span>`
+                        }
+                    `;
+                    item.onclick = () => selectBookingService(service);
+                    grid.appendChild(item);
+                });
+            });
+            
+            openModal('bookingFlowModal');
+            showBookingStep(1);
+        }
+
+        function selectBookingService(service) {
+            currentService = service;
+            document.getElementById('jobTypeInfo').innerHTML = `
+                <strong>${service.name}</strong>
+                ${service.type === 'fixed' && service.price ? 
+                    `<p>Fixed Price: ₦${service.price.toLocaleString()}</p>` : 
+                    `<p>You'll receive a custom quotation after inspection</p>`
+                }
+            `;
+            showBookingStep(2);
+        }
+
+        function showBookingStep(step) {
+            document.querySelectorAll('.flow-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+        }
+
+        async function proceedToVerification() {
+            // Validate form
+            const state = document.getElementById('bookingState').value;
+            const lga = document.getElementById('bookingLGA').value;
+            const desc = document.getElementById('bookingDesc').value;
+            const image = document.getElementById('bookingImage').files[0];
+            
+            if (!state || !lga || !desc || !image) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            // Check if user is verified
+            const { data: customer } = await supabaseClient
+                .from('customers')
+                .select('verified')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (!customer.verified) {
+                closeModal('bookingFlowModal');
+                openVerification();
+            } else {
+                await submitBooking();
+            }
+        }
+
+        // ==========================================
+        // KYC VERIFICATION
+        // ==========================================
+        function openVerification() {
+            closeModal('bookingFlowModal');
+            openModal('kycModal');
+            initFaceCamera();
+        }
+
+        function handleIdTypeChange(e) {
+            const type = e.target.value;
+            const hasId = type !== 'none';
+            
+            document.getElementById('idUploadSection').style.display = hasId ? 'block' : 'none';
+            document.getElementById('noIdSection').style.display = hasId ? 'none' : 'block';
+        }
+
+        async function handleIdCapture(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('idPreview').innerHTML = `
+                    <img src="${e.target.result}" style="max-width:100%;border-radius:8px;">
+                    <p class="success-text">✓ ID captured</p>
+                `;
+                capturedId = file;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function initFaceCamera() {
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: faceMode }
+                });
+                document.getElementById('faceVideo').srcObject = faceStream;
+            } catch (err) {
+                alert('Camera access required for verification');
+            }
+        }
+
+        function switchCamera() {
+            faceMode = faceMode === 'user' ? 'environment' : 'user';
+            if (faceStream) {
+                faceStream.getTracks().forEach(track => track.stop());
+            }
+            initFaceCamera();
+        }
+
+        function captureFace() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            capturedFace = canvas.toDataURL('image/jpeg');
+            
+            document.getElementById('facePreview').innerHTML = `
+                <img src="${capturedFace}" style="max-width:100%;border-radius:8px;">
+                <p class="success-text">✓ Face captured</p>
+            `;
+            
+            document.getElementById('submitKycBtn').disabled = false;
+        }
+
+        async function submitKYC() {
+            const idType = document.querySelector('input[name="idType"]:checked').value;
+            
+            // Upload face (required for all)
+            const faceFile = dataURLtoFile(capturedFace, 'face.jpg');
+            const { data: faceUpload } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`${currentUser.id}/face_${Date.now()}.jpg`, faceFile);
+            
+            let idUpload = null;
+            let verificationData = {
+                face_verified: true,
+                face_image_url: faceUpload.path
+            };
+            
+            if (idType !== 'none') {
+                // Upload ID photo
+                if (capturedId) {
+                    const { data: idUp } = await supabaseClient
+                        .storage
+                        .from('verifications')
+                        .upload(`${currentUser.id}/id_${Date.now()}.jpg`, capturedId);
+                    idUpload = idUp;
+                }
+                
+                verificationData.id_type = idType;
+                verificationData.id_verified = true;
+                verificationData.id_image_url = idUpload?.path;
+                verificationData.nin = document.getElementById('ninNumber').value;
+                verificationData.bvn = document.getElementById('bvnNumber').value;
+            } else {
+                // No ID - alternative verification
+                verificationData.id_type = 'none';
+                verificationData.nin = document.getElementById('ninOnly').value;
+                verificationData.id_verified = false;
+                
+                // Upload utility bill if provided
+                const utilityFile = document.getElementById('utilityBill').files[0];
+                if (utilityFile) {
+                    const { data: utilUp } = await supabaseClient
+                        .storage
+                        .from('verifications')
+                        .upload(`${currentUser.id}/utility_${Date.now()}.jpg`, utilityFile);
+                    verificationData.utility_bill_url = utilUp.path;
+                }
+            }
+            
+            // Update customer
+            await supabaseClient
+                .from('customers')
+                .update({
+                    ...verificationData,
+                    verified: true,
+                    verified_at: new Date().toISOString()
+                })
+                .eq('id', currentUser.id);
+            
+            // Log
+            await supabaseClient.from('logs').insert([{
+                action: 'CUSTOMER_VERIFIED',
+                status: 'SUCCESS',
+                details: `Customer ${currentUser.id} verified with ${idType}`
+            }]);
+            
+            closeModal('kycModal');
+            
+            // Complete booking if was in progress
+            if (currentService) {
+                await submitBooking();
+            } else {
+                alert('Verification complete!');
+                await checkVerificationStatus();
+            }
+        }
+
+        async function checkVerificationStatus() {
+            const { data: customer } = await supabaseClient
+                .from('customers')
+                .select('verified')
+                .eq('id', currentUser.id)
+                .single();
+            
+            const statusEl = document.getElementById('verifyStatus');
+            const btn = document.getElementById('startVerifyBtn');
+            
+            if (customer?.verified) {
+                statusEl.innerHTML = '<p class="verified-badge">✓ Verified</p>';
+                btn.style.display = 'none';
+            } else {
+                statusEl.innerHTML = '<p class="unverified-badge">⚠ Verification Required</p><p>Complete verification to book services</p>';
+                btn.style.display = 'block';
+            }
+        }
+
+        // ==========================================
+        // SUBMIT BOOKING
+        // ==========================================
+        async function submitBooking() {
+            const imageFile = document.getElementById('bookingImage').files[0];
+            
+            // Upload job image
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `job_${currentUser.id}_${Date.now()}.${fileExt}`;
+            
+            const { data: uploadData } = await supabaseClient
+                .storage
+                .from('job_images')
+                .upload(fileName, imageFile);
+            
+            // Check active job limit
+            const { count } = await supabaseClient
+                .from('jobs')
+                .select('*', { count: 'exact' })
+                .eq('customer_id', currentUser.id)
+                .in('status', ['pending', 'accepted', 'in_progress']);
+            
+            if (count >= 3) {
+                alert('You have 3 active jobs. Please complete some first.');
+                return;
+            }
+            
+            // Create job
+            const jobData = {
+                customer_id: currentUser.id,
+                service_id: currentService.id,
+                state: document.getElementById('bookingState').value,
+                lga: document.getElementById('bookingLGA').value,
+                description: document.getElementById('bookingDesc').value,
+                image_url: uploadData.path,
+                type: currentService.type,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            };
+            
+            if (currentService.type === 'fixed' && currentService.price) {
+                jobData.price = currentService.price;
+            }
+            
+            const { data: job, error } = await supabaseClient
+                .from('jobs')
+                .insert([jobData])
+                .select()
+                .single();
+            
+            if (error) {
+                alert('Booking failed: ' + error.message);
+                return;
+            }
+            
+            // Process referral commission if applicable
+            await processBookingCommission(currentUser.id, job.id);
+            
+            // Notify
+            await createNotification(currentUser.id, `Booking #${job.id.slice(0,8)} confirmed!`);
+            
+            // Notify regional admins
+            const { data: admins } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .eq('role', 'regional_admin')
+                .eq('state', jobData.state);
+            
+            for (const admin of admins) {
+                await createNotification(admin.id, `New job in ${jobData.state}`);
+            }
+            
+            closeModal('bookingFlowModal');
+            alert('Booking submitted successfully!');
+            
+            // Reset
+            currentService = null;
+            document.getElementById('bookingDetailsForm').reset();
+            
+            await loadBookings();
+        }
+
+        // ==========================================
+        // BOOKINGS LIST
+        // ==========================================
+        async function loadBookings() {
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select(`
+                    *,
+                    services(name, type),
+                    workers(full_name, phone)
+                `)
+                .eq('customer_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            
+            const container = document.getElementById('bookingsList');
+            
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = '<p class="empty">No bookings yet. <button onclick="showBookingFlow()" class="btn-text">Make your first booking</button></p>';
+                return;
+            }
+            
+            container.innerHTML = jobs.map(job => `
+                <div class="booking-card ${job.status}">
+                    <div class="booking-header">
+                        <div>
+                            <h4>${job.services?.name}</h4>
+                            <span class="booking-id">#${job.id.slice(0,8)}</span>
+                        </div>
+                        <span class="status-badge ${job.status}">${formatStatus(job.status)}</span>
+                    </div>
+                    <div class="booking-details">
+                        <p><strong>Location:</strong> ${job.state}, ${job.lga}</p>
+                        <p><strong>Description:</strong> ${job.description}</p>
+                        ${job.price ? `<p class="price"><strong>Price:</strong> ₦${job.price.toLocaleString()}</p>` : ''}
+                        ${job.quotation_price ? `
+                            <div class="quotation-box">
+                                <p><strong>Quotation:</strong> ₦${job.quotation_price.toLocaleString()}</p>
+                                ${job.status === 'quotation_received' ? `
+                                    <button onclick="acceptQuotation('${job.id}')" class="btn-primary btn-small">Accept</button>
+                                    <button onclick="rejectQuotation('${job.id}')" class="btn-secondary btn-small">Reject</button>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        ${job.workers ? `<p><strong>Worker:</strong> ${job.workers.full_name}</p>` : ''}
+                    </div>
+                    ${job.image_url ? `<img src="${getImageUrl('job_images', job.image_url)}" class="booking-image">` : ''}
+                    <div class="booking-actions">
+                        ${getJobActions(job)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getJobActions(job) {
+            let actions = '';
+            
+            if (job.worker_id) {
+                actions += `<button onclick="openChat('${job.id}', '${job.worker_id}')" class="btn-secondary btn-small">Chat with Worker</button>`;
+            }
+            
+            if (job.status === 'completed' && !job.rated) {
+                actions += `<button onclick="openRating('${job.id}')" class="btn-primary btn-small">Rate Service</button>`;
+            }
+            
+            if (job.status === 'awaiting_confirmation') {
+                actions += `<button onclick="confirmCompletion('${job.id}')" class="btn-success btn-small">Confirm Completion</button>`;
+            }
+            
+            return actions;
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // ==========================================
+        // REFERRAL SYSTEM
+        // ==========================================
+        function setupReferral() {
+            const referralLink = `${window.location.origin}/?ref=${btoa(currentUser.id).replace(/=/g, '')}`;
+            document.getElementById('referralLink').value = referralLink;
+            
+            loadReferralStats();
+        }
+
+        function copyReferral() {
+            const link = document.getElementById('referralLink');
+            link.select();
+            document.execCommand('copy');
+            alert('Link copied! Share with friends to earn ₦2,000');
+        }
+
+        function shareWhatsApp() {
+            const link = document.getElementById('referralLink').value;
+            const text = `Book professional services on DigsNat! Use my link: ${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        }
+
+        function shareFacebook() {
+            const link = document.getElementById('referralLink').value;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`);
+        }
+
+        function shareTwitter() {
+            const link = document.getElementById('referralLink').value;
+            const text = 'Get professional services at your doorstep with DigsNat!';
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`);
+        }
+
+        async function loadReferralStats() {
+            const { data: referrals } = await supabaseClient
+                .from('referrals')
+                .select('*')
+                .eq('referrer_id', currentUser.id);
+            
+            const stats = {
+                total: referrals?.length || 0,
+                pending: referrals?.filter(r => r.status === 'pending').length || 0,
+                completed: referrals?.filter(r => r.status === 'completed').length || 0,
+                earned: referrals?.filter(r => r.status === 'completed').length * 2000
+            };
+            
+            document.getElementById('referralStats').innerHTML = `
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span class="stat-value">${stats.total}</span>
+                        <span class="stat-label">Total Referrals</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value">${stats.completed}</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                    <div class="stat-box highlight">
+                        <span class="stat-value">₦${stats.earned.toLocaleString()}</span>
+                        <span class="stat-label">Earned</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function processReferral(code, newUserId, type) {
+            // Decode referrer ID
+            let referrerId;
+            try {
+                referrerId = atob(code);
+            } catch {
+                return; // Invalid code
+            }
+            
+            await supabaseClient.from('referrals').insert([{
+                referrer_id: referrerId,
+                referred_id: newUserId,
+                referred_type: type,
+                status: 'pending',
+                commission_amount: 2000,
+                created_at: new Date().toISOString()
+            }]);
+        }
+
+        async function processBookingCommission(customerId, jobId) {
+            // Check if this customer was referred
+            const { data: referral } = await supabaseClient
+                .from('referrals')
+                .select('*')
+                .eq('referred_id', customerId)
+                .eq('referred_type', 'customer')
+                .single();
+            
+            if (!referral || referral.status !== 'pending') return;
+            
+            // Mark as completed and pay commission
+            await supabaseClient
+                .from('referrals')
+                .update({ 
+                    status: 'completed',
+                    completed_at: new Date().toISOString(),
+                    job_id: jobId
+                })
+                .eq('id', referral.id);
+            
+            // Credit referrer wallet
+            const { data: wallet } = await supabaseClient
+                .from('wallets')
+                .select('id')
+                .eq('user_id', referral.referrer_id)
+                .single();
+            
+            if (wallet) {
+                await supabaseClient.rpc('credit_wallet', {
+                    wallet_id: wallet.id,
+                    amount: 2000,
+                    description: 'Referral commission'
+                });
+            }
+            
+            // Notify referrer
+            await createNotification(referral.referrer_id, '₦2,000 referral commission earned!');
+        }
+
+        // ==========================================
+        // CHAT SYSTEM
+        // ==========================================
+        function openChat(jobId, otherId) {
+            currentChatJob = jobId;
+            document.getElementById('chatModal').style.display = 'flex';
+            loadMessages();
+            chatInterval = setInterval(loadMessages, 3000);
+        }
+
+        function closeChat() {
+            document.getElementById('chatModal').style.display = 'none';
+            if (chatInterval) clearInterval(chatInterval);
+            currentChatJob = null;
+        }
+
+        async function loadMessages() {
+            if (!currentChatJob) return;
+            
+            const { data: messages } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('job_id', currentChatJob)
+                .order('created_at', { ascending: true });
+            
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = messages?.map(msg => `
+                <div class="message ${msg.sender_id === currentUser.id ? 'me' : 'them'}">
+                    <p>${msg.message}</p>
+                    <span class="time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+                </div>
+            `).join('') || '';
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !currentChatJob) return;
+            
+            await supabaseClient.from('messages').insert([{
+                job_id: currentChatJob,
+                sender_id: currentUser.id,
+                message: text,
+                created_at: new Date().toISOString()
+            }]);
+            
+            input.value = '';
+            loadMessages();
+        }
+
+        // ==========================================
+        // RATING SYSTEM
+        // ==========================================
+        function openRating(jobId) {
+            currentRating = 0;
+            document.querySelectorAll('#starRating span').forEach(s => s.style.opacity = '0.3');
+            document.getElementById('ratingModal').dataset.jobId = jobId;
+            openModal('ratingModal');
+        }
+
+        function setRating(rating) {
+            currentRating = rating;
+            document.querySelectorAll('#starRating span').forEach((s, i) => {
+                s.style.opacity = i < rating ? '1' : '0.3';
+            });
+        }
+
+        async function submitRating() {
+            if (currentRating === 0) {
+                alert('Please select a rating');
+                return;
+            }
+            
+            const jobId = document.getElementById('ratingModal').dataset.jobId;
+            
+            const { data: job } = await supabaseClient
+                .from('jobs')
+                .select('worker_id')
+                .eq('id', jobId)
+                .single();
+            
+            await supabaseClient.from('ratings').insert([{
+                job_id: jobId,
+                worker_id: job.worker_id,
+                customer_id: currentUser.id,
+                rating: currentRating,
+                comment: document.getElementById('ratingComment').value,
+                created_at: new Date().toISOString()
+            }]);
+            
+            await supabaseClient
+                .from('jobs')
+                .update({ rated: true })
+                .eq('id', jobId);
+            
+            closeModal('ratingModal');
+            loadBookings();
+        }
+
+        // ==========================================
+        // NOTIFICATIONS
+        // ==========================================
+        async function startNotifications() {
+            fetchNotifications();
+            setInterval(fetchNotifications, 5000);
+        }
+
+        async function fetchNotifications() {
+            const { data: notifs } = await supabaseClient
+                .from('notifications')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('read', false);
+            
+            const badge = document.getElementById('notifCount');
+            badge.textContent = notifs?.length || 0;
+            badge.style.display = notifs?.length > 0 ? 'flex' : 'none';
+        }
+
+        // ==========================================
+        // UTILITIES
+        // ==========================================
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, {type:mime});
+        }
+
+        function populateStates() {
+            const states = ['Abia', 'Abuja', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 
+                'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+                'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 
+                'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'];
+            
+            const options = states.map(s => `<option value="${s}">${s}</option>`).join('');
+            
+            document.getElementById('bookingState').innerHTML += options;
+        }
+
+        function showComingSoon() {
+            const toast = document.getElementById('comingSoonToast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        function getAdLink(ad) {
+            switch(ad.link_type) {
+                case 'landing': return '/';
+                case 'service': return `/?service=${ad.link_target}`;
+                case 'apply_worker': return '/apply-worker';
+                case 'apply_staff': return '/apply-staff';
+                case 'custom': return ad.link_target;
+                default: return '/';
+            }
+        }
+
+        async function trackAdClick(adId) {
+            await supabaseClient
+                .from('advertisements')
+                .update({ click_count: supabaseClient.rpc('increment', { x: 1 }) })
+                .eq('id', adId);
+        }
+
+        function logout() {
+            localStorage.removeItem('digsnat_session');
+            window.location.reload();
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>

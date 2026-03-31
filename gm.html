@@ -9,75 +9,255 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <!-- Access Check Overlay -->
+    <!-- Access Overlay -->
     <div id="accessOverlay" class="access-overlay">
         <div class="access-box">
-            <h2>🔒 Secure Access Required</h2>
-            <input type="password" id="accessKey" placeholder="Enter access code">
-            <button onclick="checkAccess()" class="btn-primary">Access Dashboard</button>
+            <h2>🔒 GM Secure Access</h2>
+            <input type="password" id="gmKey" placeholder="Enter access code">
+            <button onclick="checkAccess()" class="btn-primary">Access</button>
             <p class="error" id="accessError"></p>
         </div>
     </div>
 
-    <!-- Main GM Dashboard (Hidden until auth) -->
+    <!-- GM Dashboard -->
     <div id="gmDashboard" style="display:none;">
-        <header class="dashboard-header gm-header">
+        <header class="gm-header">
             <div class="container">
                 <h1>👑 General Manager Dashboard</h1>
-                <button class="btn-logout" onclick="logoutGM()">Exit</button>
+                <button onclick="logoutGM()" class="btn-logout">Exit</button>
             </div>
         </header>
 
         <nav class="gm-nav">
             <div class="container">
                 <button onclick="showSection('overview')" class="nav-btn active">Overview</button>
-                <button onclick="showSection('jobs')" class="nav-btn">All Jobs</button>
-                <button onclick="showSection('workers')" class="nav-btn">Workers</button>
-                <button onclick="showSection('customers')" class="nav-btn">Customers</button>
-                <button onclick="showSection('payments')" class="nav-btn">Payments</button>
-                <button onclick="showSection('staff')" class="nav-btn">Staff Manager</button>
+                <button onclick="showSection('content')" class="nav-btn">Content & Ads</button>
                 <button onclick="showSection('services')" class="nav-btn">Services</button>
-                <button onclick="showSection('content')" class="nav-btn">Platform Content</button>
-                <button onclick="showSection('logs')" class="nav-btn">System Logs</button>
+                <button onclick="showSection('jobs')" class="nav-btn">Jobs</button>
+                <button onclick="showSection('workers')" class="nav-btn">Workers</button>
+                <button onclick="showSection('staff')" class="nav-btn">Staff</button>
+                <button onclick="showSection('payments')" class="nav-btn">Payments</button>
+                <button onclick="showSection('sms')" class="nav-btn">SMS (Soon)</button>
             </div>
         </nav>
 
         <main class="gm-main">
-            <!-- Overview Section -->
+            <!-- Overview -->
             <section id="overview" class="gm-section active">
                 <div class="container">
-                    <div class="stats-grid gm-stats">
+                    <div class="stats-grid">
                         <div class="stat-card">
                             <h3>Total Jobs</h3>
-                            <p class="stat-number" id="totalJobs">0</p>
+                            <p class="stat-number" id="statTotalJobs">0</p>
                         </div>
                         <div class="stat-card">
-                            <h3>Total Revenue</h3>
-                            <p class="stat-number" id="totalRevenue">₦0</p>
+                            <h3>Revenue</h3>
+                            <p class="stat-number" id="statRevenue">₦0</p>
                         </div>
                         <div class="stat-card">
                             <h3>Active Workers</h3>
-                            <p class="stat-number" id="activeWorkers">0</p>
+                            <p class="stat-number" id="statWorkers">0</p>
                         </div>
                         <div class="stat-card">
-                            <h3>Pending Disputes</h3>
-                            <p class="stat-number" id="pendingDisputes">0</p>
+                            <h3>Customers</h3>
+                            <p class="stat-number" id="statCustomers">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Pending Verifications</h3>
+                            <p class="stat-number" id="statPendingVerify">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Referral Payouts</h3>
+                            <p class="stat-number" id="statReferrals">₦0</p>
                         </div>
                     </div>
-                    
-                    <div class="chart-container">
-                        <h3>Job Trends (Last 30 Days)</h3>
-                        <canvas id="trendsChart"></canvas>
+
+                    <div class="recent-activity">
+                        <h3>Recent Activity</h3>
+                        <div id="activityLog"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- Jobs Section -->
+            <!-- Content & Advertisements -->
+            <section id="content" class="gm-section">
+                <div class="container">
+                    <div class="content-tabs">
+                        <button onclick="showContentTab('hero')" class="tab-btn active">Hero Section</button>
+                        <button onclick="showContentTab('ads')" class="tab-btn">Advertisements</button>
+                        <button onclick="showContentTab('announcements')" class="tab-btn">Announcements</button>
+                    </div>
+
+                    <!-- Hero Editor -->
+                    <div class="content-panel" id="heroPanel">
+                        <h3>Edit Homepage Hero</h3>
+                        <form id="heroForm">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="heroTitle" placeholder="Main headline">
+                            </div>
+                            <div class="form-group">
+                                <label>Subtitle</label>
+                                <input type="text" id="heroSubtitle" placeholder="Sub headline">
+                            </div>
+                            <div class="form-group">
+                                <label>Background Image URL</label>
+                                <input type="url" id="heroBgUrl" placeholder="https://...">
+                            </div>
+                            <button type="submit" class="btn-primary">Update Hero</button>
+                        </form>
+                    </div>
+
+                    <!-- Ads Manager -->
+                    <div class="content-panel" id="adsPanel" style="display:none;">
+                        <div class="section-header">
+                            <h3>Advertisement Manager</h3>
+                            <button onclick="showAddAd()" class="btn-primary">+ New Advertisement</button>
+                        </div>
+
+                        <div class="form-panel" id="addAdForm" style="display:none;">
+                            <h4>Create Advertisement</h4>
+                            <form id="adForm">
+                                <div class="form-group">
+                                    <label>Ad Title</label>
+                                    <input type="text" id="adTitle" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Subtitle</label>
+                                    <input type="text" id="adSubtitle">
+                                </div>
+                                <div class="form-group">
+                                    <label>Image</label>
+                                    <input type="file" id="adImage" accept="image/*">
+                                    <span>OR</span>
+                                    <input type="url" id="adImageUrl" placeholder="Image URL">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Link Type</label>
+                                        <select id="adLinkType" onchange="toggleAdTarget()">
+                                            <option value="landing">Platform Home</option>
+                                            <option value="service">Specific Service</option>
+                                            <option value="apply_worker">Worker Application</option>
+                                            <option value="apply_staff">Staff Application</option>
+                                            <option value="custom">Custom URL</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="adTargetGroup">
+                                        <label>Target (Service ID or URL)</label>
+                                        <input type="text" id="adTarget">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Placement</label>
+                                    <select id="adPlacement">
+                                        <option value="landing">Landing Page Only</option>
+                                        <option value="all">All Pages</option>
+                                        <option value="customer">Customer Dashboard</option>
+                                        <option value="worker">Worker Dashboard</option>
+                                        <option value="staff">Staff Dashboard</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Priority (0-10)</label>
+                                    <input type="number" id="adPriority" min="0" max="10" value="5">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">Save Ad</button>
+                                    <button type="button" onclick="hideAddAd()" class="btn-secondary">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="adsList" class="data-table"></div>
+                    </div>
+
+                    <!-- Announcements -->
+                    <div class="content-panel" id="announcementsPanel" style="display:none;">
+                        <h3>Platform Announcements</h3>
+                        <form id="announcementForm">
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="announceText" rows="4" placeholder="Announcement text..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Audience</label>
+                                <select id="announceTarget">
+                                    <option value="all">All Users</option>
+                                    <option value="customers">Customers Only</option>
+                                    <option value="workers">Workers Only</option>
+                                    <option value="staff">Staff Only</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Publish Announcement</button>
+                        </form>
+                        <div id="announcementsList" style="margin-top:30px;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services -->
+            <section id="services" class="gm-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Service Management</h2>
+                        <button onclick="showAddService()" class="btn-primary">+ Add Service</button>
+                    </div>
+
+                    <div class="form-panel" id="addServiceForm" style="display:none;">
+                        <form id="serviceForm">
+                            <div class="form-group">
+                                <label>Service Name</label>
+                                <input type="text" id="svcName" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <select id="svcType" onchange="toggleServicePrice()">
+                                        <option value="fixed">Fixed Price</option>
+                                        <option value="quotation">Quotation Based</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="svcPriceGroup">
+                                    <label>Price (₦)</label>
+                                    <input type="number" id="svcPrice">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image</label>
+                                <input type="file" id="svcImage" accept="image/*">
+                                <span>OR</span>
+                                <input type="url" id="svcImageUrl" placeholder="Image URL">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="svcDesc" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="svcFeatured"> Featured Service
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Save Service</button>
+                                <button type="button" onclick="hideAddService()" class="btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="servicesList" class="data-table"></div>
+                </div>
+            </section>
+
+            <!-- Jobs -->
             <section id="jobs" class="gm-section">
                 <div class="container">
-                    <h2>All Jobs</h2>
+                    <h2>Job Management</h2>
                     <div class="filter-bar">
-                        <select id="jobStatusFilter">
+                        <select id="jobStateFilter" onchange="loadJobs()">
+                            <option value="">All States</option>
+                        </select>
+                        <select id="jobStatusFilter" onchange="loadJobs()">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="accepted">Accepted</option>
@@ -85,463 +265,875 @@
                             <option value="completed">Completed</option>
                             <option value="disputed">Disputed</option>
                         </select>
-                        <input type="text" id="jobSearch" placeholder="Search jobs...">
+                        <input type="text" id="jobSearch" placeholder="Search jobs..." onkeyup="loadJobs()">
                     </div>
-                    <div id="allJobsList" class="data-table"></div>
+                    <div id="jobsList" class="data-table"></div>
                 </div>
             </section>
 
-            <!-- Workers Section -->
+            <!-- Workers -->
             <section id="workers" class="gm-section">
                 <div class="container">
                     <h2>Worker Management</h2>
+                    <div class="filter-bar">
+                        <select id="workerStatusFilter" onchange="loadWorkers()">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending Approval</option>
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
                     <div id="workersList" class="data-table"></div>
                 </div>
             </section>
 
-            <!-- Customers Section -->
-            <section id="customers" class="gm-section">
-                <div class="container">
-                    <h2>Customer Database</h2>
-                    <div id="customersList" class="data-table"></div>
-                </div>
-            </section>
-
-            <!-- Payments Section -->
-            <section id="payments" class="gm-section">
-                <div class="container">
-                    <h2>Payment Management</h2>
-                    <button onclick="generatePayroll()" class="btn-primary btn-large">Generate Payroll</button>
-                    
-                    <div id="payrollSection" style="display:none; margin-top: 30px;">
-                        <h3>Pending Payments</h3>
-                        <div id="payrollTable" class="data-table"></div>
-                        <button onclick="markAllPaid()" class="btn-success">Mark All as Paid</button>
-                    </div>
-
-                    <div class="payment-settings" style="margin-top: 40px;">
-                        <h3>Payment Methods Configuration</h3>
-                        <div class="form-group">
-                            <label>Naira Account Details</label>
-                            <textarea id="nairaDetails" placeholder="Bank: &#10;Account Number: &#10;Account Name:"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>USD SWIFT Details</label>
-                            <textarea id="usdDetails"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>USDT TRC20 Address</label>
-                            <input type="text" id="usdtAddress">
-                        </div>
-                        <button onclick="savePaymentSettings()" class="btn-primary">Save Settings</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Staff Manager Section -->
+            <!-- Staff -->
             <section id="staff" class="gm-section">
                 <div class="container">
                     <h2>Staff Management</h2>
-                    <div class="staff-form">
-                        <h3>Create New Staff Access</h3>
-                        <form id="staffForm">
-                            <div class="form-group">
-                                <label>Role</label>
-                                <select id="staffRole" required>
-                                    <option value="regional_admin">Regional Admin</option>
-                                    <option value="support">Support</option>
-                                    <option value="support_admin">Support Admin</option>
-                                    <option value="assistant_manager">Assistant Manager</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="staffEmail" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Full Name</label>
-                                <input type="text" id="staffName" required>
-                            </div>
-                            <div class="form-group" id="stateGroup">
-                                <label>Assigned State</label>
-                                <select id="staffState">
-                                    <option value="">Select State</option>
-                                    <option value="Lagos">Lagos</option>
-                                    <option value="Abuja">Abuja</option>
-                                    <option value="Rivers">Rivers</option>
-                                    <option value="Kano">Kano</option>
-                                    <option value="Delta">Delta</option>
-                                    <option value="Oyo">Oyo</option>
-                                    <option value="Enugu">Enugu</option>
-                                    <option value="Kaduna">Kaduna</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn-primary">Generate Access</button>
-                        </form>
+                    
+                    <div class="staff-tabs">
+                        <button onclick="showStaffTab('applications')" class="tab-btn active">Applications</button>
+                        <button onclick="showStaffTab('active')" class="tab-btn">Active Staff</button>
+                        <button onclick="showStaffTab('invite')" class="tab-btn">Send Invitation</button>
                     </div>
-                    <div id="staffList" class="data-table" style="margin-top: 30px;"></div>
-                </div>
-            </section>
 
-            <!-- Services Section -->
-            <section id="services" class="gm-section">
-                <div class="container">
-                    <h2>Service Manager</h2>
-                    <button onclick="showServiceForm()" class="btn-primary">+ Add New Service</button>
-                    
-                    <div id="serviceForm" style="display:none; margin: 20px 0; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                        <form id="newServiceForm">
-                            <div class="form-group">
-                                <label>Service Name</label>
-                                <input type="text" id="newServiceName" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Type</label>
-                                <select id="newServiceType">
-                                    <option value="fixed">Fixed Price</option>
-                                    <option value="quotation">Quotation Based</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="priceGroup">
-                                <label>Price (₦)</label>
-                                <input type="number" id="newServicePrice">
-                            </div>
-                            <div class="form-group">
-                                <label>Image URL</label>
-                                <input type="text" id="newServiceImage" placeholder="https://...">
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="newServiceDesc" rows="3"></textarea>
-                            </div>
-                            <button type="submit" class="btn-primary">Save Service</button>
-                            <button type="button" onclick="hideServiceForm()" class="btn-secondary">Cancel</button>
-                        </form>
+                    <!-- Applications Panel -->
+                    <div class="staff-panel active" id="applicationsPanel">
+                        <h3>Pending Applications</h3>
+                        <div id="staffApplicationsList" class="data-table"></div>
                     </div>
-                    
-                    <div id="servicesList" class="data-table" style="margin-top: 20px;"></div>
-                </div>
-            </section>
 
-            <!-- Platform Content Section -->
-            <section id="content" class="gm-section">
-                <div class="container">
-                    <h2>Platform Content</h2>
-                    <div class="content-tabs">
-                        <button onclick="showContentTab('announcements')" class="tab-btn active">Announcements</button>
-                        <button onclick="showContentTab('banners')" class="tab-btn">Homepage Banners</button>
-                        <button onclick="showContentTab('emails')" class="tab-btn">Email Templates</button>
+                    <!-- Active Staff Panel -->
+                    <div class="staff-panel" id="activePanel" style="display:none;">
+                        <h3>Active Staff Members</h3>
+                        <div id="activeStaffList" class="data-table"></div>
                     </div>
-                    
-                    <div id="contentEditor" class="content-editor">
-                        <textarea id="contentText" rows="10" placeholder="Enter content here..."></textarea>
-                        <button onclick="saveContent()" class="btn-primary">Publish</button>
+
+                    <!-- Invite Panel -->
+                    <div class="staff-panel" id="invitePanel" style="display:none;">
+                        <h3>Send WhatsApp Invitation</h3>
+                        <div class="form-panel">
+                            <form id="inviteForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Select Qualified Candidate *</label>
+                                        <select id="inviteCandidate" required>
+                                            <option value="">Choose from qualified applications</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Position *</label>
+                                        <select id="invitePosition" required>
+                                            <option value="regional_admin">Regional Admin</option>
+                                            <option value="support">Support</option>
+                                            <option value="support_admin">Support Admin</option>
+                                            <option value="assistant_manager">Assistant Manager</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="inviteStateGroup">
+                                    <label>Assigned State *</label>
+                                    <select id="inviteState">
+                                        <option value="">Select State</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>WhatsApp Group Link *</label>
+                                    <input type="url" id="whatsappGroupLink" required placeholder="https://chat.whatsapp.com/...">
+                                    <p class="hint">Staff will receive this link via WhatsApp</p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Personalized Message</label>
+                                    <textarea id="inviteMessage" rows="3" placeholder="Congratulations! You've been selected..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary">Send Invitation</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- System Logs Section -->
-            <section id="logs" class="gm-section">
+
+            <!-- Payments -->
+            <section id="payments" class="gm-section">
                 <div class="container">
-                    <h2>System Health Logs</h2>
-                    <div id="logsList" class="data-table"></div>
+                    <h2>Payment Configuration</h2>
+                    
+                    <div class="payment-config-panel">
+                        <div class="config-section">
+                            <h3>Payment Methods</h3>
+                            <div class="coming-soon-badge" id="autoPayBadge">Auto-Payment Coming Soon</div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enableAutoPay" onchange="toggleAutoPay()">
+                                    Enable Automatic Payments (Requires Paystack/Stripe setup)
+                                </label>
+                            </div>
+
+                            <div id="manualPayConfig">
+                                <div class="form-group">
+                                    <label>Naira Bank Account</label>
+                                    <textarea id="payNaira" placeholder="Bank Name&#10;Account Number&#10;Account Name"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>USD SWIFT Details</label>
+                                    <textarea id="payUsd" placeholder="Bank details..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>USDT TRC20 Address</label>
+                                    <input type="text" id="payUsdt" placeholder="TRC20 Address">
+                                </div>
+                            </div>
+
+                            <div id="autoPayConfig" style="display:none;">
+                                <div class="form-group">
+                                    <label>Paystack Secret Key</label>
+                                    <input type="password" id="paystackKey" placeholder="sk_...">
+                                    <span class="coming-soon-text">Integration ready - activate to use</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Stripe Secret Key</label>
+                                    <input type="password" id="stripeKey" placeholder="sk_...">
+                                    <span class="coming-soon-text">Integration ready - activate to use</span>
+                                </div>
+                            </div>
+
+                            <button onclick="savePaymentConfig()" class="btn-primary">Save Configuration</button>
+                        </div>
+
+                        <div class="config-section" style="margin-top:40px;">
+                            <h3>Payroll & Commissions</h3>
+                            <button onclick="generatePayroll()" class="btn-primary">Generate Payroll</button>
+                            <button onclick="processReferralPayouts()" class="btn-secondary">Process Referral Payouts</button>
+                            <div id="payrollOutput" style="margin-top:20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SMS (Coming Soon) -->
+            <section id="sms" class="gm-section">
+                <div class="container">
+                    <div class="coming-soon-page">
+                        <h2>SMS Messaging</h2>
+                        <div class="coming-soon-icon">📱</div>
+                        <p>SMS notification system is pre-wired and ready for activation.</p>
+                        
+                        <div class="prewired-features">
+                            <h4>Pre-wired Features:</h4>
+                            <ul>
+                                <li>✓ Booking confirmations</li>
+                                <li>✓ Worker assignment alerts</li>
+                                <li>✓ Job completion notifications</li>
+                                <li>✓ Payment receipts</li>
+                                <li>✓ Verification codes</li>
+                            </ul>
+                        </div>
+
+                        <div class="activation-form">
+                            <h4>Activate SMS (Coming Soon)</h4>
+                            <div class="form-group">
+                                <label>SMS Provider</label>
+                                <select disabled>
+                                    <option>Twilio (International)</option>
+                                    <option>Africa's Talking (Africa)</option>
+                                    <option>Termii (Nigeria)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <input type="password" disabled placeholder="Enter API key to activate">
+                            </div>
+                            <button class="btn-primary" disabled>Activate SMS System</button>
+                            <p class="coming-soon-note">This feature will be unlocked in a future update</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- Edit Modals -->
+    <div class="modal" id="editJobModal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" onclick="closeModal('editJobModal')">&times;</span>
+            <h3>Edit Job</h3>
+            <form id="editJobForm">
+                <input type="hidden" id="editJobId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="editJobStatus">
+                            <option value="pending">Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₦)</label>
+                        <input type="number" id="editJobPrice">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editJobDesc" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Update Job</button>
+                <button type="button" onclick="deleteJob()" class="btn-danger">Delete Job</button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/config.js"></script>
-    <script src="/app.js"></script>
     <script>
-        // GM Access Key - In production, this should be hashed/encrypted
-        const GM_ACCESS_KEY = 'DIGSNAT_GM_' + new Date().getFullYear() + '_SECURE';
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if already authenticated
-            const gmSession = sessionStorage.getItem('gm_auth');
-            if (gmSession === 'true') {
+        const GM_KEY = 'DIGSNAT_GM_2026_SECURE';
+        let currentEditJob = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('gm_auth') === 'true') {
                 showDashboard();
             }
+            populateStates();
         });
 
         function checkAccess() {
-            const input = document.getElementById('accessKey').value;
-            if (input === GM_ACCESS_KEY) {
+            if (document.getElementById('gmKey').value === GM_KEY) {
                 sessionStorage.setItem('gm_auth', 'true');
                 showDashboard();
             } else {
-                document.getElementById('accessError').textContent = 'Invalid access code';
+                document.getElementById('accessError').textContent = 'Invalid code';
             }
         }
 
         function showDashboard() {
             document.getElementById('accessOverlay').style.display = 'none';
             document.getElementById('gmDashboard').style.display = 'block';
-            loadGMData();
-        }
-
-        async function loadGMData() {
-            // Load overview stats
-            const { count: totalJobs } = await supabaseClient
-                .from('jobs')
-                .select('*', { count: 'exact' });
-
-            const { data: revenue } = await supabaseClient
-                .from('jobs')
-                .select('price')
-                .eq('status', 'completed');
-
-            const totalRevenue = revenue?.reduce((sum, j) => sum + (j.price || 0), 0) || 0;
-
-            const { count: activeWorkers } = await supabaseClient
-                .from('workers')
-                .select('*', { count: 'exact' })
-                .eq('status', 'active');
-
-            const { count: pendingDisputes } = await supabaseClient
-                .from('disputes')
-                .select('*', { count: 'exact' })
-                .eq('status', 'pending');
-
-            document.getElementById('totalJobs').textContent = totalJobs || 0;
-            document.getElementById('totalRevenue').textContent = '₦' + totalRevenue.toLocaleString();
-            document.getElementById('activeWorkers').textContent = activeWorkers || 0;
-            document.getElementById('pendingDisputes').textContent = pendingDisputes || 0;
-
-            // Load jobs
-            loadAllJobs();
-            loadWorkers();
-            loadCustomers();
-            loadStaff();
+            loadOverview();
             loadServices();
-            loadLogs();
+            loadJobs();
+            loadWorkers();
+            loadStaff();
+            loadAds();
         }
 
-        function showSection(sectionId) {
+        function showSection(id) {
             document.querySelectorAll('.gm-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
         }
 
-        async function loadAllJobs() {
-            const { data: jobs } = await supabaseClient
-                .from('jobs')
-                .select('*, services(name), customers(email), workers(full_name)')
-                .order('created_at', { ascending: false });
-
-            const container = document.getElementById('allJobsList');
-            container.innerHTML = createTable([
-                'ID', 'Service', 'Customer', 'Worker', 'Status', 'Price', 'Date', 'Actions'
-            ], jobs?.map(j => [
-                j.id.slice(0, 8),
-                j.services?.name,
-                j.customers?.email,
-                j.workers?.full_name || 'Unassigned',
-                `<span class="status-badge ${j.status}">${j.status}</span>`,
-                '₦' + (j.price || 0).toLocaleString(),
-                new Date(j.created_at).toLocaleDateString(),
-                `<button onclick="viewJob('${j.id}')" class="btn-small">View</button>`
-            ]) || []);
+        function showContentTab(tab) {
+            document.querySelectorAll('.content-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`${tab}Panel`).style.display = 'block';
+            event.target.classList.add('active');
         }
 
-        async function loadWorkers() {
-            const { data: workers } = await supabaseClient
-                .from('workers')
-                .select('*, ratings(rating)');
+        // Overview
+        async function loadOverview() {
+            const { count: jobs } = await supabaseClient.from('jobs').select('*', { count: 'exact' });
+            const { data: revenue } = await supabaseClient.from('jobs').select('price').eq('status', 'completed');
+            const { count: workers } = await supabaseClient.from('workers').select('*', { count: 'exact' }).eq('status', 'active');
+            const { count: customers } = await supabaseClient.from('customers').select('*', { count: 'exact' });
+            const { count: pending } = await supabaseClient.from('customers').select('*', { count: 'exact' }).eq('verified', false);
+            const { data: referrals } = await supabaseClient.from('referrals').select('commission_amount').eq('status', 'completed');
 
-            const container = document.getElementById('workersList');
-            container.innerHTML = createTable([
-                'Name', 'Email', 'State', 'Status', 'Rating', 'Actions'
-            ], workers?.map(w => {
-                const avgRating = w.ratings?.length 
-                    ? (w.ratings.reduce((a, r) => a + r.rating, 0) / w.ratings.length).toFixed(1)
-                    : 'N/A';
-                return [
-                    w.full_name,
-                    w.email,
-                    w.state,
-                    w.status,
-                    '⭐ ' + avgRating,
-                    `<button onclick="toggleWorker('${w.id}', '${w.status}')" class="btn-small">${w.status === 'active' ? 'Deactivate' : 'Activate'}</button>`
-                ];
-            }) || []);
+            const totalRevenue = revenue?.reduce((sum, j) => sum + (j.price || 0), 0) || 0;
+            const totalReferrals = referrals?.reduce((sum, r) => sum + (r.commission_amount || 0), 0) || 0;
+
+            document.getElementById('statTotalJobs').textContent = jobs || 0;
+            document.getElementById('statRevenue').textContent = '₦' + totalRevenue.toLocaleString();
+            document.getElementById('statWorkers').textContent = workers || 0;
+            document.getElementById('statCustomers').textContent = customers || 0;
+            document.getElementById('statPendingVerify').textContent = pending || 0;
+            document.getElementById('statReferrals').textContent = '₦' + totalReferrals.toLocaleString();
+
+            // Load recent activity
+            const { data: logs } = await supabaseClient.from('logs').select('*').order('created_at', { ascending: false }).limit(10);
+            document.getElementById('activityLog').innerHTML = logs?.map(l => `
+                <div class="activity-item">
+                    <span class="activity-time">${new Date(l.created_at).toLocaleString()}</span>
+                    <span class="activity-action">${l.action}</span>
+                    <span class="activity-status ${l.status.toLowerCase()}">${l.status}</span>
+                </div>
+            `).join('') || '<p>No recent activity</p>';
         }
 
-        async function loadCustomers() {
-            const { data: customers } = await supabaseClient
-                .from('customers')
-                .select('*');
+        // Content & Ads
+        document.getElementById('heroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await supabaseClient.from('content').upsert([{
+                type: 'hero',
+                title: document.getElementById('heroTitle').value,
+                subtitle: document.getElementById('heroSubtitle').value,
+                background_image: document.getElementById('heroBgUrl').value,
+                active: true,
+                updated_at: new Date().toISOString()
+            }]);
+            alert('Hero updated!');
+        });
 
-            const container = document.getElementById('customersList');
-            container.innerHTML = createTable([
-                'Email', 'Verified', 'Jobs', 'Joined', 'Actions'
-            ], customers?.map(c => [
-                c.email,
-                c.verified ? '✓' : '✗',
-                'View',
-                new Date(c.created_at).toLocaleDateString(),
-                `<button onclick="viewCustomer('${c.id}')" class="btn-small">Details</button>`
-            ]) || []);
+        function showAddAd() {
+            document.getElementById('addAdForm').style.display = 'block';
         }
 
-        async function generatePayroll() {
-            const { data: pendingPayments } = await supabaseClient
-                .from('jobs')
-                .select('*, workers(full_name, email), services(name)')
-                .eq('status', 'completed')
-                .eq('paid', false);
-
-            const container = document.getElementById('payrollTable');
-            document.getElementById('payrollSection').style.display = 'block';
-            
-            container.innerHTML = createTable([
-                'Worker', 'Service', 'Amount', 'Worker Earnings (70%)', 'Actions'
-            ], pendingPayments?.map(p => [
-                p.workers?.full_name,
-                p.services?.name,
-                '₦' + p.price?.toLocaleString(),
-                '₦' + Math.floor(p.price * 0.7).toLocaleString(),
-                `<button onclick="copyPayment('${p.workers?.email}', ${Math.floor(p.price * 0.7)})" class="btn-small">Copy</button>`
-            ]) || []);
+        function hideAddAd() {
+            document.getElementById('addAdForm').style.display = 'none';
+            document.getElementById('adForm').reset();
         }
 
-        function copyPayment(email, amount) {
-            navigator.clipboard.writeText(`Pay ${email}: ₦${amount.toLocaleString()}`);
-            alert('Payment details copied!');
+        function toggleAdTarget() {
+            const type = document.getElementById('adLinkType').value;
+            document.getElementById('adTargetGroup').style.display = 
+                (type === 'service' || type === 'custom') ? 'block' : 'none';
         }
 
-        async function markAllPaid() {
-            await supabaseClient
-                .from('jobs')
-                .update({ paid: true, paid_at: new Date().toISOString() })
-                .eq('status', 'completed')
-                .eq('paid', false);
-            
-            alert('All marked as paid');
-            generatePayroll();
-        }
-
-        document.getElementById('staffForm').addEventListener('submit', async function(e) {
+        document.getElementById('adForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const role = document.getElementById('staffRole').value;
-            const state = document.getElementById('staffState').value;
+            let imageUrl = document.getElementById('adImageUrl').value;
+            const file = document.getElementById('adImage').files[0];
             
-            if ((role === 'regional_admin' || role === 'support') && !state) {
-                alert('State is required for this role');
-                return;
+            if (file) {
+                const { data } = await supabaseClient.storage.from('advertisements').upload(`${Date.now()}_${file.name}`, file);
+                imageUrl = `${SUPABASE_URL}/storage/v1/object/public/advertisements/${data.path}`;
             }
 
-            const token = 'STAFF_' + Math.random().toString(36).substring(2, 15).toUpperCase();
-            
-            const { data, error } = await supabaseClient.from('staff').insert([{
-                role: role,
-                email: document.getElementById('staffEmail').value,
-                full_name: document.getElementById('staffName').value,
-                state: state || null,
-                access_token: token,
-                status: 'active',
+            await supabaseClient.from('advertisements').insert([{
+                title: document.getElementById('adTitle').value,
+                subtitle: document.getElementById('adSubtitle').value,
+                image_url: imageUrl,
+                link_type: document.getElementById('adLinkType').value,
+                link_target: document.getElementById('adTarget').value,
+                placement: document.getElementById('adPlacement').value,
+                priority: parseInt(document.getElementById('adPriority').value),
+                active: true,
                 created_by: 'GM'
             }]);
 
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                alert('Staff access created! Token: ' + token);
-                loadStaff();
-                this.reset();
-            }
+            hideAddAd();
+            loadAds();
         });
 
-        async function loadStaff() {
-            const { data: staff } = await supabaseClient
-                .from('staff')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            const container = document.getElementById('staffList');
-            container.innerHTML = createTable([
-                'Role', 'Name', 'Email', 'State', 'Status', 'Token'
-            ], staff?.map(s => [
-                s.role,
-                s.full_name,
-                s.email,
-                s.state || 'N/A',
-                s.status,
-                s.access_token
-            ]) || []);
+        async function loadAds() {
+            const { data: ads } = await supabaseClient.from('advertisements').select('*').order('created_at', { ascending: false });
+            
+            document.getElementById('adsList').innerHTML = createTable(
+                ['Image', 'Title', 'Placement', 'Priority', 'Clicks', 'Status', 'Actions'],
+                ads?.map(a => [
+                    `<img src="${a.image_url}" style="width:80px;height:50px;object-fit:cover;">`,
+                    a.title,
+                    a.placement,
+                    a.priority,
+                    a.click_count || 0,
+                    a.active ? 'Active' : 'Inactive',
+                    `<button onclick="toggleAd('${a.id}', ${!a.active})" class="btn-small">${a.active ? 'Pause' : 'Activate'}</button>
+                     <button onclick="deleteAd('${a.id}')" class="btn-small btn-danger">Delete</button>`
+                ]) || []
+            );
         }
 
-        function showServiceForm() {
-            document.getElementById('serviceForm').style.display = 'block';
+        async function toggleAd(id, active) {
+            await supabaseClient.from('advertisements').update({ active }).eq('id', id);
+            loadAds();
         }
 
-        function hideServiceForm() {
-            document.getElementById('serviceForm').style.display = 'none';
+        async function deleteAd(id) {
+            if (!confirm('Delete this ad?')) return;
+            await supabaseClient.from('advertisements').delete().eq('id', id);
+            loadAds();
         }
 
-        document.getElementById('newServiceType').addEventListener('change', function() {
-            document.getElementById('priceGroup').style.display = 
-                this.value === 'fixed' ? 'block' : 'none';
-        });
-
-        document.getElementById('newServiceForm').addEventListener('submit', async function(e) {
+        document.getElementById('announcementForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const { error } = await supabaseClient.from('services').insert([{
-                name: document.getElementById('newServiceName').value,
-                type: document.getElementById('newServiceType').value,
-                price: document.getElementById('newServicePrice').value || null,
-                image: document.getElementById('newServiceImage').value,
-                description: document.getElementById('newServiceDesc').value,
+            await supabaseClient.from('announcements').insert([{
+                content: document.getElementById('announceText').value,
+                target: document.getElementById('announceTarget').value,
+                published_by: 'GM',
+                created_at: new Date().toISOString()
+            }]);
+
+            alert('Announcement published!');
+            document.getElementById('announcementForm').reset();
+            loadAnnouncements();
+        });
+
+        async function loadAnnouncements() {
+            const { data: anns } = await supabaseClient.from('announcements').select('*').order('created_at', { ascending: false });
+            document.getElementById('announcementsList').innerHTML = anns?.map(a => `
+                <div class="announcement-item">
+                    <p>${a.content}</p>
+                    <small>Target: ${a.target} | ${new Date(a.created_at).toLocaleString()}</small>
+                </div>
+            `).join('') || '<p>No announcements</p>';
+        }
+
+        // Services
+        function showAddService() {
+            document.getElementById('addServiceForm').style.display = 'block';
+        }
+
+        function hideAddService() {
+            document.getElementById('addServiceForm').style.display = 'none';
+            document.getElementById('serviceForm').reset();
+        }
+
+        function toggleServicePrice() {
+            const type = document.getElementById('svcType').value;
+            document.getElementById('svcPriceGroup').style.display = type === 'fixed' ? 'block' : 'none';
+        }
+
+        document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let imageUrl = document.getElementById('svcImageUrl').value;
+            const file = document.getElementById('svcImage').files[0];
+            
+            if (file) {
+                const { data } = await supabaseClient.storage.from('services').upload(`${Date.now()}_${file.name}`, file);
+                imageUrl = `${SUPABASE_URL}/storage/v1/object/public/services/${data.path}`;
+            }
+
+            await supabaseClient.from('services').insert([{
+                name: document.getElementById('svcName').value,
+                type: document.getElementById('svcType').value,
+                price: document.getElementById('svcPrice').value || null,
+                image_url: imageUrl,
+                description: document.getElementById('svcDesc').value,
+                featured: document.getElementById('svcFeatured').checked,
                 active: true
             }]);
 
-            if (!error) {
-                alert('Service added!');
-                hideServiceForm();
-                loadServices();
-            }
+            hideAddService();
+            loadServices();
         });
 
         async function loadServices() {
-            const { data: services } = await supabaseClient
-                .from('services')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            const container = document.getElementById('servicesList');
-            container.innerHTML = createTable([
-                'Name', 'Type', 'Price', 'Status', 'Actions'
-            ], services?.map(s => [
-                s.name,
-                s.type,
-                s.price ? '₦' + s.price.toLocaleString() : 'Quotation',
-                s.active ? 'Active' : 'Inactive',
-                `<button onclick="toggleService('${s.id}', ${!s.active})" class="btn-small">${s.active ? 'Deactivate' : 'Activate'}</button>
-                 <button onclick="deleteService('${s.id}')" class="btn-small btn-danger">Delete</button>`
-            ]) || []);
+            const { data: services } = await supabaseClient.from('services').select('*').order('created_at', { ascending: false });
+            
+            document.getElementById('servicesList').innerHTML = createTable(
+                ['Image', 'Name', 'Type', 'Price', 'Featured', 'Status', 'Actions'],
+                services?.map(s => [
+                    `<img src="${s.image_url || '/placeholder.jpg'}" style="width:50px;height:50px;object-fit:cover;">`,
+                    s.name,
+                    s.type,
+                    s.price ? '₦' + s.price.toLocaleString() : '-',
+                    s.featured ? '✓' : '-',
+                    s.active ? 'Active' : 'Inactive',
+                    `<button onclick="editService('${s.id}')" class="btn-small">Edit</button>
+                     <button onclick="toggleService('${s.id}', ${!s.active})" class="btn-small">${s.active ? 'Pause' : 'Activate'}</button>`
+                ]) || []
+            );
         }
 
-        async function loadLogs() {
-            const { data: logs } = await supabaseClient
-                .from('logs')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(100);
+        // Jobs
+        async function loadJobs() {
+            const state = document.getElementById('jobStateFilter').value;
+            const status = document.getElementById('jobStatusFilter').value;
+            const search = document.getElementById('jobSearch').value;
 
-            const container = document.getElementById('logsList');
-            container.innerHTML = createTable([
-                'Time', 'Action', 'Status', 'Details'
-            ], logs?.map(l => [
-                new Date(l.created_at).toLocaleString(),
-                l.action,
-                `<span class="status-badge ${l.status.toLowerCase()}">${l.status}</span>`,
-                l.details || '-'
-            ]) || []);
+            let query = supabaseClient.from('jobs').select('*, services(name), customers(email, full_name), workers(full_name)');
+            
+            if (state) query = query.eq('state', state);
+            if (status) query = query.eq('status', status);
+            
+            const { data: jobs } = await query.order('created_at', { ascending: false });
+
+            const filtered = search ? jobs?.filter(j => 
+                j.description?.toLowerCase().includes(search.toLowerCase()) ||
+                j.customers?.email?.toLowerCase().includes(search.toLowerCase())
+            ) : jobs;
+
+            document.getElementById('jobsList').innerHTML = createTable(
+                ['ID', 'Service', 'Customer', 'Worker', 'State', 'Price', 'Status', 'Actions'],
+                filtered?.map(j => [
+                    j.id.slice(0, 8),
+                    j.services?.name,
+                    j.customers?.full_name || j.customers?.email,
+                    j.workers?.full_name || '-',
+                    j.state,
+                    j.price ? '₦' + j.price.toLocaleString() : '-',
+                    `<span class="status-badge ${j.status}">${j.status}</span>`,
+                    `<button onclick="editJob('${j.id}')" class="btn-small">Edit</button>
+                     <button onclick="deleteJobDirect('${j.id}')" class="btn-small btn-danger">Delete</button>`
+                ]) || []
+            );
+        }
+
+        async function editJob(id) {
+            const { data: job } = await supabaseClient.from('jobs').select('*').eq('id', id).single();
+            currentEditJob = job;
+            
+            document.getElementById('editJobId').value = job.id;
+            document.getElementById('editJobStatus').value = job.status;
+            document.getElementById('editJobPrice').value = job.price || '';
+            document.getElementById('editJobDesc').value = job.description || '';
+            
+            openModal('editJobModal');
+        }
+
+        document.getElementById('editJobForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            await supabaseClient.from('jobs').update({
+                status: document.getElementById('editJobStatus').value,
+                price: document.getElementById('editJobPrice').value || null,
+                description: document.getElementById('editJobDesc').value
+            }).eq('id', currentEditJob.id);
+            
+            closeModal('editJobModal');
+            loadJobs();
+        });
+
+        async function deleteJobDirect(id) {
+            if (!confirm('Permanently delete this job?')) return;
+            await supabaseClient.from('jobs').delete().eq('id', id);
+            loadJobs();
+        }
+
+        // Workers
+        async function loadWorkers() {
+            const status = document.getElementById('workerStatusFilter').value;
+            
+            let query = supabaseClient.from('workers').select('*');
+            if (status) query = query.eq('status', status);
+            
+            const { data: workers } = await query.order('created_at', { ascending: false });
+
+            document.getElementById('workersList').innerHTML = createTable(
+                ['Name', 'Email', 'Phone', 'State', 'Status', 'Token', 'Actions'],
+                workers?.map(w => [
+                    w.full_name,
+                    w.email,
+                    w.phone,
+                    w.state,
+                    `<span class="status-badge ${w.status}">${w.status}</span>`,
+                    w.access_token ? `<code>${w.access_token}</code>` : '-',
+                    `<button onclick="updateWorkerStatus('${w.id}', '${w.status === 'active' ? 'suspended' : 'active'}')" class="btn-small">${w.status === 'active' ? 'Suspend' : 'Activate'}</button>
+                     <button onclick="regenerateToken('${w.id}')" class="btn-small">New Token</button>`
+                ]) || []
+            );
+        }
+
+        async function updateWorkerStatus(id, status) {
+            await supabaseClient.from('workers').update({ status }).eq('id', id);
+            loadWorkers();
+        }
+
+        async function regenerateToken(id) {
+            const newToken = 'WRK_' + Math.random().toString(36).substring(2, 15).toUpperCase();
+            await supabaseClient.from('workers').update({ access_token: newToken }).eq('id', id);
+            alert('New token generated: ' + newToken);
+            loadWorkers();
+        }
+
+        //staff
+        function showStaffTab(tab) {
+            document.querySelectorAll('.staff-panel').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.staff-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`${tab}Panel`).style.display = 'block';
+            event.target.classList.add('active');
+            
+            if (tab === 'applications') loadStaffApplications();
+            if (tab === 'active') loadActiveStaff();
+            if (tab === 'invite') loadQualifiedCandidates();
+        }
+
+        async function loadStaffApplications() {
+            const { data: applications } = await supabaseClient
+                .from('staff_applications')
+                .select('*')
+                .in('status', ['pending_review', 'qualified', 'rejected'])
+                .order('applied_at', { ascending: false });
+
+            document.getElementById('staffApplicationsList').innerHTML = createTable(
+                ['Name', 'Position', 'State', 'WhatsApp', 'Experience', 'Status', 'Actions'],
+                applications?.map(a => [
+                    a.full_name,
+                    a.position.replace('_', ' '),
+                    a.preferred_state || '-',
+                    a.whatsapp_number,
+                    a.experience_years,
+                    `<span class="status-badge ${a.status}">${a.status.replace('_', ' ')}</span>`,
+                    `<button onclick="viewApplication('${a.id}')" class="btn-small">View</button>
+                     ${a.status === 'pending_review' ? `<button onclick="markQualified('${a.id}')" class="btn-small btn-success">Qualify</button>` : ''}
+                     ${a.status === 'qualified' ? `<button onclick="selectForInvite('${a.id}')" class="btn-small btn-primary">Select</button>` : ''}`
+                ]) || []
+            );
+        }
+
+        async function loadActiveStaff() {
+            const { data: staff } = await supabaseClient
+                .from('staff')
+                .select('*')
+                .in('status', ['active', 'invited', 'onboarding'])
+                .order('created_at', { ascending: false });
+
+            document.getElementById('activeStaffList').innerHTML = createTable(
+                ['Name', 'Role', 'State', 'WhatsApp', 'Status', 'Token', 'Actions'],
+                staff?.map(s => [
+                    s.full_name || 'Pending Setup',
+                    s.role.replace('_', ' '),
+                    s.state || '-',
+                    s.whatsapp_number || '-',
+                    `<span class="status-badge ${s.status}">${s.status}</span>`,
+                    s.access_token ? `<code>${s.access_token}</code>` : 'Not generated',
+                    s.status === 'invited' ? `<button onclick="resendInvite('${s.id}')" class="btn-small">Resend</button>` : 
+                    `<button onclick="suspendStaff('${s.id}')" class="btn-small btn-danger">Suspend</button>`
+                ]) || []
+            );
+        }
+
+        async function loadQualifiedCandidates() {
+            const { data: qualified } = await supabaseClient
+                .from('staff_applications')
+                .select('*')
+                .eq('status', 'qualified')
+                .order('applied_at', { ascending: false });
+
+            const options = qualified?.map(q => 
+                `<option value="${q.id}" data-name="${q.full_name}" data-whatsapp="${q.whatsapp_number}" data-email="${q.email}">
+                    ${q.full_name} - ${q.position.replace('_', ' ')} (${q.preferred_state || 'No state'})
+                </option>`
+            ).join('') || '<option value="">No qualified candidates</option>';
+
+            document.getElementById('inviteCandidate').innerHTML = '<option value="">Select candidate</option>' + options;
+        }
+
+        document.getElementById('invitePosition')?.addEventListener('change', (e) => {
+            const needsState = ['regional_admin', 'support'].includes(e.target.value);
+            document.getElementById('inviteStateGroup').style.display = needsState ? 'block' : 'none';
+            document.getElementById('inviteState').required = needsState;
+        });
+
+        document.getElementById('inviteForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const candidateSelect = document.getElementById('inviteCandidate');
+            const selectedOption = candidateSelect.options[candidateSelect.selectedIndex];
+            
+            const candidateId = candidateSelect.value;
+            const fullName = selectedOption.dataset.name;
+            const whatsapp = selectedOption.dataset.whatsapp;
+            const email = selectedOption.dataset.email;
+            
+            const position = document.getElementById('invitePosition').value;
+            const state = document.getElementById('inviteState').value;
+            const groupLink = document.getElementById('whatsappGroupLink').value;
+            const message = document.getElementById('inviteMessage').value || 
+                `Congratulations ${fullName}! You've been selected as ${position.replace('_', ' ')} at DigsNat. Join our WhatsApp group: ${groupLink}. Complete your setup at:`;
+
+            // Generate unique token
+            const token = position.toUpperCase().substring(0, 4) + '_' + Math.random().toString(36).substring(2, 12).toUpperCase();
+
+            // Create staff record
+            const { data: staff } = await supabaseClient.from('staff').insert([{
+                role: position,
+                full_name: fullName,
+                email: email,
+                whatsapp_number: whatsapp,
+                state: state || null,
+                access_token: token,
+                status: 'invited',
+                invited_at: new Date().toISOString(),
+                onboarding_step: 0
+            }]).select().single();
+
+            // Update application
+            await supabaseClient.from('staff_applications').update({
+                status: 'invited',
+                staff_id: staff.id,
+                invited_at: new Date().toISOString()
+            }).eq('id', candidateId);
+
+            // Log WhatsApp message (in production, integrate WhatsApp Business API)
+            await supabaseClient.from('whatsapp_logs').insert([{
+                recipient: whatsapp,
+                message: message,
+                group_link: groupLink,
+                staff_id: staff.id,
+                status: 'sent',
+                sent_at: new Date().toISOString()
+            });
+
+            // Show success with copyable message
+            const fullMessage = `${message} ${window.location.origin}/staff-onboard.html?token=${token}`;
+            
+            alert(`Invitation prepared!\n\nWhatsApp Message:\n${fullMessage}\n\nCopy and send to ${whatsapp}`);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(fullMessage);
+            
+            document.getElementById('inviteForm').reset();
+            loadQualifiedCandidates();
+        });
+
+        async function markQualified(id) {
+            await supabaseClient.from('staff_applications').update({
+                status: 'qualified',
+                qualified_at: new Date().toISOString()
+            }).eq('id', id);
+            
+            loadStaffApplications();
+        }
+
+        function selectForInvite(id) {
+            showStaffTab('invite');
+            document.getElementById('inviteCandidate').value = id;
+        }
+
+        async function resendInvite(id) {
+            const { data: staff } = await supabaseClient.from('staff').select('*').eq('id', id).single();
+            
+            const message = `Reminder: Complete your DigsNat staff setup: ${window.location.origin}/staff-onboard.html?token=${staff.access_token}`;
+            
+            await supabaseClient.from('whatsapp_logs').insert([{
+                recipient: staff.whatsapp_number,
+                message: message,
+                staff_id: staff.id,
+                status: 'sent',
+                sent_at: new Date().toISOString()
+            });
+            
+            alert(`Reminder sent to ${staff.whatsapp_number}`);
+        }
+
+        async function suspendStaff(id) {
+            if (!confirm('Suspend this staff member?')) return;
+            
+            await supabaseClient.from('staff').update({
+                status: 'suspended',
+                suspended_at: new Date().toISOString()
+            }).eq('id', id);
+            
+            loadActiveStaff();
+        }
+
+
+        // Payments
+        function toggleAutoPay() {
+            const enabled = document.getElementById('enableAutoPay').checked;
+            document.getElementById('manualPayConfig').style.display = enabled ? 'none' : 'block';
+            document.getElementById('autoPayConfig').style.display = enabled ? 'block' : 'none';
+            document.getElementById('autoPayBadge').style.display = enabled ? 'none' : 'block';
+        }
+
+        async function savePaymentConfig() {
+            const config = {
+                id: 'payment',
+                auto_payment_enabled: document.getElementById('enableAutoPay').checked,
+                naira_details: document.getElementById('payNaira').value,
+                usd_details: document.getElementById('payUsd').value,
+                usdt_address: document.getElementById('payUsdt').value,
+                paystack_key: document.getElementById('paystackKey').value,
+                stripe_key: document.getElementById('stripeKey').value,
+                updated_at: new Date().toISOString()
+            };
+
+            await supabaseClient.from('gm_config').upsert([config]);
+            alert('Payment configuration saved!');
+        }
+
+        async function generatePayroll() {
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*, workers(full_name), services(name)')
+                .eq('status', 'completed')
+                .eq('paid', false);
+
+            const output = document.getElementById('payrollOutput');
+            
+            if (!jobs || jobs.length === 0) {
+                output.innerHTML = '<p>No pending payments</p>';
+                return;
+            }
+
+            const total = jobs.reduce((sum, j) => sum + Math.floor((j.price || 0) * 0.7), 0);
+
+            output.innerHTML = `
+                <div class="payroll-summary">
+                    <h4>Pending Worker Payments</h4>
+                    <p>Total: ₦${total.toLocaleString()} (${jobs.length} jobs)</p>
+                </div>
+                ${createTable(
+                    ['Worker', 'Service', 'Job Price', 'Worker Pay (70%)', 'Action'],
+                    jobs.map(j => [
+                        j.workers?.full_name,
+                        j.services?.name,
+                        '₦' + (j.price || 0).toLocaleString(),
+                        '₦' + Math.floor((j.price || 0) * 0.7).toLocaleString(),
+                        `<button onclick="markJobPaid('${j.id}')" class="btn-small btn-success">Mark Paid</button>`
+                    ])
+                )}
+            `;
+        }
+
+        async function markJobPaid(id) {
+            await supabaseClient.from('jobs').update({ 
+                paid: true, 
+                paid_at: new Date().toISOString() 
+            }).eq('id', id);
+            generatePayroll();
+        }
+
+        async function processReferralPayouts() {
+            const { data: pending } = await supabaseClient
+                .from('referrals')
+                .select('*')
+                .eq('status', 'completed')
+                .eq('paid', false);
+
+            if (!pending || pending.length === 0) {
+                alert('No pending referral payouts');
+                return;
+            }
+
+            const total = pending.length * 2000;
+            if (!confirm(`Process ${pending.length} referral payouts (₦${total.toLocaleString()})?`)) return;
+
+            for (const ref of pending) {
+                // Credit referrer wallet
+                const { data: wallet } = await supabaseClient
+                    .from('wallets')
+                    .select('id')
+                    .eq('user_id', ref.referrer_id)
+                    .single();
+
+                if (wallet) {
+                    await supabaseClient.rpc('credit_wallet', {
+                        wallet_id: wallet.id,
+                        amount: 2000,
+                        description: 'Referral payout processed'
+                    });
+                }
+
+                await supabaseClient.from('referrals').update({ 
+                    paid: true, 
+                    paid_at: new Date().toISOString() 
+                }).eq('id', ref.id);
+            }
+
+            alert('Referral payouts processed!');
+        }
+
+        // Utilities
+        function populateStates() {
+            const states = ['Abia', 'Abuja', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 
+                'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+                'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 
+                'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'];
+            
+            const options = states.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('jobStateFilter').innerHTML += options;
+            document.getElementById('staffState').innerHTML += options;
         }
 
         function createTable(headers, rows) {
@@ -557,15 +1149,27 @@
                 html += '</tr>';
             });
             
-            html += '</tbody></table>';
-            return html;
+            return html + '</tbody></table>';
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
         }
 
         function logoutGM() {
             sessionStorage.removeItem('gm_auth');
-            window.location.href = '/index.html';
+            window.location.reload();
         }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>
-

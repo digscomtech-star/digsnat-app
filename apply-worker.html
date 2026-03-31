@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply as Service Provider - DigsNat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="simple-header">
+        <div class="container">
+            <a href="/" class="back-link">← Back to Home</a>
+            <h1>Become a DigsNat Service Provider</h1>
+        </div>
+    </header>
+
+    <main class="application-main">
+        <div class="container">
+            <div class="application-form-container">
+                <h2>Worker Application</h2>
+                <p class="subtitle">Join our network of verified professionals. Earn money on your own schedule.</p>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <span>💰</span>
+                        <h4>Earn Up to ₦500k/month</h4>
+                    </div>
+                    <div class="benefit-item">
+                        <span>⏰</span>
+                        <h4>Flexible Schedule</h4>
+                    </div>
+                    <div class="benefit-item">
+                        <span>🛡️</span>
+                        <h4>Secure Payments</h4>
+                    </div>
+                    <div class="benefit-item">
+                        <span>📱</span>
+                        <h4>Easy Job Management</h4>
+                    </div>
+                </div>
+
+                <form id="workerApplyForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Legal Name *</label>
+                            <input type="text" id="applicantName" required placeholder="As on your ID">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address *</label>
+                            <input type="email" id="applicantEmail" required placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number *</label>
+                            <input type="tel" id="applicantPhone" required placeholder="+234 800 000 0000">
+                        </div>
+                        <div class="form-group">
+                            <label>State of Operation *</label>
+                            <select id="applicantState" required>
+                                <option value="">Select State</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>LGA (Local Government Area) *</label>
+                        <input type="text" id="applicantLGA" required placeholder="Your LGA">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Services You Provide *</label>
+                        <div class="services-checkboxes" id="servicesCheckboxes"></div>
+                        <input type="text" id="otherServices" placeholder="Other services (comma separated)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Years of Experience *</label>
+                        <select id="applicantExperience" required>
+                            <option value="">Select</option>
+                            <option value="0-1">Less than 1 year</option>
+                            <option value="1-3">1-3 years</option>
+                            <option value="3-5">3-5 years</option>
+                            <option value="5+">5+ years</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tell us about your experience *</label>
+                        <textarea id="applicantBio" rows="4" required placeholder="Describe your skills and experience..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Referral Code (Optional)</label>
+                        <input type="text" id="referralCode" placeholder="If someone referred you">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="termsCheck" required>
+                            I agree to the Terms of Service and Privacy Policy. I confirm all information is accurate.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-full btn-large">Submit Application</button>
+                </form>
+
+                <div id="successMessage" class="success-message" style="display:none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Application Submitted!</h3>
+                    <p>Thank you for applying. We'll review your application within 24-48 hours.</p>
+                    <p>Check your email for updates.</p>
+                    <a href="/" class="btn-secondary">Return to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="simple-footer">
+        <div class="container">
+            <p>&copy; 2026 DigsNat Services. Proudly Nigerian 🇳🇬</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            populateStates();
+            loadServices();
+            
+            // Check for referral code in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                document.getElementById('referralCode').value = ref;
+            }
+        });
+
+        async function loadServices() {
+            const { data: services } = await supabaseClient
+                .from('services')
+                .select('*')
+                .eq('active', true);
+
+            const container = document.getElementById('servicesCheckboxes');
+            services?.forEach(service => {
+                const label = document.createElement('label');
+                label.className = 'checkbox-item';
+                label.innerHTML = `
+                    <input type="checkbox" name="services" value="${service.name}">
+                    <span>${service.name}</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        document.getElementById('workerApplyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked'))
+                .map(cb => cb.value);
+            
+            const otherServices = document.getElementById('otherServices').value;
+            if (otherServices) {
+                selectedServices.push(...otherServices.split(',').map(s => s.trim()));
+            }
+
+            const applicationData = {
+                full_name: document.getElementById('applicantName').value,
+                email: document.getElementById('applicantEmail').value,
+                phone: document.getElementById('applicantPhone').value,
+                state: document.getElementById('applicantState').value,
+                lga: document.getElementById('applicantLGA').value,
+                services: selectedServices,
+                experience: document.getElementById('applicantExperience').value,
+                bio: document.getElementById('applicantBio').value,
+                referral_code: document.getElementById('referralCode').value || null,
+                status: 'pending',
+                applied_at: new Date().toISOString()
+            };
+
+            const { data, error } = await supabaseClient
+                .from('worker_applications')
+                .insert([applicationData])
+                .select()
+                .single();
+
+            if (error) {
+                alert('Error submitting application: ' + error.message);
+                return;
+            }
+
+            // Process referral if exists
+            if (applicationData.referral_code) {
+                await processWorkerReferral(applicationData.referral_code, data.id);
+            }
+
+            // Log
+            await supabaseClient.from('logs').insert([{
+                action: 'WORKER_APPLICATION',
+                status: 'SUCCESS',
+                details: `Application from ${applicationData.email}`
+            }]);
+
+            document.getElementById('workerApplyForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        });
+
+        async function processWorkerReferral(code, applicationId) {
+            // Find referrer by decoding code
+            try {
+                const referrerId = atob(code);
+                await supabaseClient.from('referrals').insert([{
+                    referrer_id: referrerId,
+                    referred_id: applicationId,
+                    referred_type: 'worker',
+                    status: 'pending',
+                    commission_amount: 2000
+                }]);
+            } catch (e) {
+                console.log('Invalid referral code');
+            }
+        }
+
+        function populateStates() {
+            const states = ['Abia', 'Abuja', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 
+                'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+                'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 
+                'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'];
+            
+            const options = states.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('applicantState').innerHTML += options;
+        }
+    </script>
+</body>
+</html>

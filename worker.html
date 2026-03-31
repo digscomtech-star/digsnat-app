@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Dashboard - DigsNat</title>
+    <title>Worker Portal - DigsNat</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="stylesheet" href="/style.css">
@@ -13,32 +13,43 @@
         <div class="container">
             <h1>Worker Portal</h1>
             <div class="header-actions">
-                <button class="btn-notification" id="notifBtn">🔔 <span class="badge" id="notifCount">0</span></button>
-                <button class="btn-logout" onclick="logout()">Logout</button>
+                <button class="btn-notification" id="notifBtn">
+                    🔔 <span class="badge" id="notifCount">0</span>
+                </button>
+                <button onclick="logout()" class="btn-logout">Logout</button>
             </div>
         </div>
     </header>
 
     <main class="dashboard-main">
         <div class="container">
-            <!-- Worker Stats -->
+            <!-- Ads Section -->
+            <div class="ads-section" id="workerAds"></div>
+
+            <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Active Jobs</h3>
-                    <p class="stat-number" id="activeJobs">0</p>
+                    <p class="stat-number" id="activeCount">0</p>
                 </div>
                 <div class="stat-card">
                     <h3>Completed</h3>
-                    <p class="stat-number" id="completedJobs">0</p>
+                    <p class="stat-number" id="completedCount">0</p>
                 </div>
                 <div class="stat-card">
                     <h3>Earnings</h3>
-                    <p class="stat-number" id="totalEarnings">₦0</p>
+                    <p class="stat-number" id="earnings">₦0</p>
                 </div>
                 <div class="stat-card">
                     <h3>Rating</h3>
-                    <p class="stat-number" id="avgRating">⭐ 0</p>
+                    <p class="stat-number" id="rating">⭐ 0</p>
                 </div>
+            </div>
+
+            <!-- Verification Warning -->
+            <div class="verification-banner" id="verifyBanner" style="display:none;">
+                <p>⚠️ Complete your identity verification to accept jobs</p>
+                <button onclick="openVerification()" class="btn-primary">Verify Now</button>
             </div>
 
             <!-- Available Jobs -->
@@ -47,299 +58,643 @@
                 <div id="availableJobs"></div>
             </section>
 
-            <!-- My Active Jobs -->
+            <!-- My Jobs -->
             <section class="jobs-section">
                 <h2>My Active Jobs</h2>
-                <div id="myActiveJobs"></div>
+                <div id="myJobs"></div>
             </section>
 
-            <!-- Completed Jobs -->
+            <!-- Completed -->
             <section class="jobs-section">
                 <h2>Completed Jobs</h2>
-                <div id="completedJobsList"></div>
+                <div id="completedJobs"></div>
+            </section>
+
+            <!-- Refer & Earn -->
+            <section class="jobs-section">
+                <h2>Refer & Earn</h2>
+                <div class="referral-box">
+                    <p>Earn ₦2,000 for every customer you refer who completes a booking!</p>
+                    <div class="referral-link-box">
+                        <input type="text" id="referralLink" readonly>
+                        <button onclick="copyReferral()" class="btn-primary">Copy</button>
+                    </div>
+                    <div class="share-buttons">
+                        <button onclick="shareWhatsApp()" class="btn-whatsapp">WhatsApp</button>
+                        <button onclick="shareFacebook()" class="btn-facebook">Facebook</button>
+                    </div>
+                </div>
             </section>
         </div>
     </main>
 
+    <!-- Verification Modal -->
+    <div class="modal" id="verifyModal">
+        <div class="modal-content modal-large">
+            <span class="close-btn" onclick="closeModal('verifyModal')">&times;</span>
+            <h3>Worker Verification Required</h3>
+            <p>For your security and customer trust, please complete verification</p>
+            
+            <div class="kyc-step">
+                <h4>ID Verification</h4>
+                <div class="upload-area" id="workerIdUpload">
+                    <input type="file" id="workerIdFile" accept="image/*" capture="environment" hidden>
+                    <p>📷 Capture your ID (Driver's License, National ID, or Passport)</p>
+                </div>
+                <div id="workerIdPreview"></div>
+            </div>
+
+            <div class="kyc-step">
+                <h4>Face Verification</h4>
+                <div class="camera-container">
+                    <video id="faceVideo" autoplay playsinline></video>
+                    <canvas id="faceCanvas" style="display:none;"></canvas>
+                </div>
+                <div class="camera-controls">
+                    <button onclick="switchCamera()" class="btn-secondary">🔄 Switch</button>
+                    <button onclick="captureFace()" class="btn-primary">📸 Capture</button>
+                </div>
+                <div id="facePreview"></div>
+            </div>
+
+            <button onclick="submitVerification()" class="btn-primary btn-full" id="submitVerifyBtn" disabled>Complete Verification</button>
+        </div>
+    </div>
+
     <!-- Quotation Modal -->
-    <div class="modal" id="quotationModal">
+    <div class="modal" id="quoteModal">
         <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('quoteModal')">&times;</span>
             <h3>Submit Quotation</h3>
-            <form id="quotationForm">
+            <form id="quoteForm">
                 <div class="form-group">
                     <label>Materials Needed</label>
-                    <textarea id="materials" rows="3" placeholder="List materials..."></textarea>
+                    <textarea id="quoteMaterials" rows="3"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Work Description</label>
-                    <textarea id="workDesc" rows="3" placeholder="Describe the work..."></textarea>
+                    <textarea id="quoteDesc" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Base Price (₦)</label>
-                    <input type="number" id="basePrice" required>
-                    <p class="hint">System will add 30% (Customer sees: ₦<span id="finalPrice">0</span>)</p>
+                    <label>Your Base Price (₦)</label>
+                    <input type="number" id="quoteBase" required>
+                    <p class="hint">Platform adds 30%. Customer sees: ₦<span id="customerPrice">0</span></p>
                 </div>
-                <button type="submit" class="btn-primary">Submit Quote</button>
+                <button type="submit" class="btn-primary btn-full">Submit Quote</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div class="modal" id="chatModal">
+        <div class="modal-content chat-modal">
+            <div class="chat-header">
+                <h3>Chat with Customer</h3>
+                <span class="close-btn" onclick="closeChat()">&times;</span>
+            </div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/config.js"></script>
-    <script src="/app.js"></script>
     <script>
-        let currentJobForQuote = null;
+        let workerSession = null;
+        let faceStream = null;
+        let faceMode = 'user';
+        let capturedFace = null;
+        let capturedId = null;
+        let currentQuoteJob = null;
+        let currentChatJob = null;
+        let chatInterval = null;
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Check for token in URL
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
             
             if (token) {
-                await validateWorkerToken(token);
+                await validateToken(token);
             } else {
-                const session = JSON.parse(localStorage.getItem('user_session'));
-                if (!session || session.role !== 'worker') {
-                    alert('Invalid access');
-                    window.location.href = '/index.html';
-                    return;
-                }
+                checkExistingSession();
             }
-
-            loadWorkerDashboard();
-            startNotificationPolling();
         });
 
-        async function validateWorkerToken(token) {
-            const { data: worker, error } = await supabaseClient
+        async function validateToken(token) {
+            const { data: worker } = await supabaseClient
                 .from('workers')
                 .select('*')
                 .eq('access_token', token)
-                .eq('status', 'active')
                 .single();
 
-            if (error || !worker) {
-                alert('Invalid or expired access');
-                window.location.href = '/index.html';
+            if (!worker || worker.status !== 'active') {
+                alert('Invalid or expired access token');
+                window.location.href = '/';
                 return;
             }
 
-            localStorage.setItem('user_session', JSON.stringify({
+            workerSession = {
                 role: 'worker',
                 id: worker.id,
                 email: worker.email,
-                name: worker.full_name
-            }));
+                name: worker.full_name,
+                state: worker.state,
+                verified: worker.verified || false
+            };
+            
+            localStorage.setItem('digsnat_session', JSON.stringify(workerSession));
+            loadWorkerDashboard();
+        }
+
+        function checkExistingSession() {
+            const session = JSON.parse(localStorage.getItem('digsnat_session'));
+            if (session && session.role === 'worker') {
+                workerSession = session;
+                loadWorkerDashboard();
+            } else {
+                alert('Access required. Please use your worker link.');
+                window.location.href = '/';
+            }
         }
 
         async function loadWorkerDashboard() {
-            const session = JSON.parse(localStorage.getItem('user_session'));
+            // Load ads
+            await loadAds();
             
-            // Load stats
-            const { data: active } = await supabaseClient
+            // Check verification
+            const { data: worker } = await supabaseClient
+                .from('workers')
+                .select('verified')
+                .eq('id', workerSession.id)
+                .single();
+            
+            if (!worker?.verified) {
+                document.getElementById('verifyBanner').style.display = 'flex';
+            }
+
+            // Stats
+            const { count: active } = await supabaseClient
                 .from('jobs')
                 .select('*', { count: 'exact' })
-                .eq('worker_id', session.id)
+                .eq('worker_id', workerSession.id)
                 .in('status', ['accepted', 'in_progress']);
 
-            const { data: completed } = await supabaseClient
+            const { count: completed } = await supabaseClient
                 .from('jobs')
                 .select('*', { count: 'exact' })
-                .eq('worker_id', session.id)
+                .eq('worker_id', workerSession.id)
                 .eq('status', 'completed');
 
             const { data: earnings } = await supabaseClient
                 .from('jobs')
                 .select('price')
-                .eq('worker_id', session.id)
+                .eq('worker_id', workerSession.id)
                 .eq('status', 'completed');
 
             const { data: ratings } = await supabaseClient
                 .from('ratings')
                 .select('rating')
-                .eq('worker_id', session.id);
+                .eq('worker_id', workerSession.id);
 
-            document.getElementById('activeJobs').textContent = active?.length || 0;
-            document.getElementById('completedJobs').textContent = completed?.length || 0;
-            
-            const totalEarn = earnings?.reduce((sum, j) => sum + (j.price || 0), 0) || 0;
-            document.getElementById('totalEarnings').textContent = '₦' + totalEarn.toLocaleString();
-
+            const totalEarn = earnings?.reduce((sum, j) => sum + Math.floor((j.price || 0) * 0.7), 0) || 0;
             const avgRating = ratings?.length 
-                ? (ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1)
+                ? (ratings.reduce((a, r) => a + r.rating, 0) / ratings.length).toFixed(1)
                 : 0;
-            document.getElementById('avgRating').textContent = '⭐ ' + avgRating;
 
-            // Load available jobs in worker's state
-            const { data: workerData } = await supabaseClient
-                .from('workers')
-                .select('state, services')
-                .eq('id', session.id)
-                .single();
+            document.getElementById('activeCount').textContent = active || 0;
+            document.getElementById('completedCount').textContent = completed || 0;
+            document.getElementById('earnings').textContent = '₦' + totalEarn.toLocaleString();
+            document.getElementById('rating').textContent = '⭐ ' + avgRating;
 
-            const { data: available } = await supabaseClient
+            // Setup referral
+            const referralLink = `${window.location.origin}/?ref=${btoa(workerSession.id).replace(/=/g, '')}&type=worker`;
+            document.getElementById('referralLink').value = referralLink;
+
+            // Load jobs
+            await loadAvailableJobs();
+            await loadMyJobs();
+            await loadCompletedJobs();
+            
+            startNotifications();
+        }
+
+        async function loadAds() {
+            const { data: ads } = await supabaseClient
+                .from('advertisements')
+                .select('*')
+                .eq('active', true)
+                .in('placement', ['worker', 'all']);
+            
+            const container = document.getElementById('workerAds');
+            if (ads && ads.length > 0) {
+                container.innerHTML = ads.map(ad => `
+                    <div class="ad-banner" onclick="trackAdClick('${ad.id}')">
+                        <a href="${getAdLink(ad)}" target="_blank">
+                            <img src="${ad.image_url}" alt="${ad.title}">
+                        </a>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadAvailableJobs() {
+            const { data: jobs } = await supabaseClient
                 .from('jobs')
-                .select('*, customers(email), services(name)')
-                .eq('state', workerData.state)
+                .select('*, services(name), customers(full_name)')
+                .eq('state', workerSession.state)
                 .eq('status', 'pending')
                 .is('worker_id', null);
 
-            const availContainer = document.getElementById('availableJobs');
-            if (available && available.length > 0) {
-                available.forEach(job => {
-                    const card = createJobCard(job, 'available');
-                    availContainer.appendChild(card);
-                });
-            } else {
-                availContainer.innerHTML = '<p class="empty">No available jobs in your area</p>';
+            const container = document.getElementById('availableJobs');
+            
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = '<p class="empty">No available jobs in your area</p>';
+                return;
             }
 
-            // Load my active jobs
-            const { data: myJobs } = await supabaseClient
-                .from('jobs')
-                .select('*, customers(email), services(name)')
-                .eq('worker_id', session.id)
-                .in('status', ['accepted', 'in_progress']);
+            container.innerHTML = jobs.map(job => `
+                <div class="job-card">
+                    <div class="job-header">
+                        <h4>${job.services?.name}</h4>
+                        <span class="location">${job.state}, ${job.lga}</span>
+                    </div>
+                    <p>${job.description}</p>
+                    ${job.image_url ? `<img src="${getImageUrl('job_images', job.image_url)}" class="job-image">` : ''}
+                    <div class="job-actions">
+                        <button onclick="acceptJob('${job.id}')" class="btn-primary">Accept Job</button>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            const activeContainer = document.getElementById('myActiveJobs');
-            if (myJobs && myJobs.length > 0) {
-                myJobs.forEach(job => {
-                    const card = createJobCard(job, 'active');
-                    activeContainer.appendChild(card);
-                });
-            } else {
-                activeContainer.innerHTML = '<p class="empty">No active jobs</p>';
+        async function loadMyJobs() {
+            const { data: jobs } = await supabaseClient
+                .from('jobs')
+                .select('*, services(name), customers(full_name, email)')
+                .eq('worker_id', workerSession.id)
+                .in('status', ['accepted', 'in_progress', 'quotation_sent']);
+
+            const container = document.getElementById('myJobs');
+            
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = '<p class="empty">No active jobs</p>';
+                return;
             }
 
-            // Load completed
-            const { data: doneJobs } = await supabaseClient
+            container.innerHTML = jobs.map(job => {
+                let actions = '';
+                if (job.type === 'quotation' && !job.quotation_price) {
+                    actions = `<button onclick="openQuote('${job.id}')" class="btn-primary">Submit Quotation</button>`;
+                } else {
+                    actions = `<button onclick="completeJob('${job.id}')" class="btn-primary">Mark Complete</button>`;
+                }
+                actions += `<button onclick="openChat('${job.id}', '${job.customer_id}')" class="btn-secondary">Chat</button>`;
+
+                return `
+                    <div class="job-card">
+                        <div class="job-header">
+                            <h4>${job.services?.name}</h4>
+                            <span class="status-badge ${job.status}">${job.status.replace('_', ' ')}</span>
+                        </div>
+                        <p><strong>Customer:</strong> ${job.customers?.full_name}</p>
+                        <p>${job.description}</p>
+                        ${job.quotation_price ? `<p class="quotation">Your Quote: ₦${job.quotation_price.toLocaleString()}</p>` : ''}
+                        <div class="job-actions">${actions}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadCompletedJobs() {
+            const { data: jobs } = await supabaseClient
                 .from('jobs')
-                .select('*, customers(email), services(name)')
-                .eq('worker_id', session.id)
+                .select('*, services(name), customers(full_name)')
+                .eq('worker_id', workerSession.id)
                 .eq('status', 'completed')
                 .order('completed_at', { ascending: false });
 
-            const doneContainer = document.getElementById('completedJobsList');
-            if (doneJobs && doneJobs.length > 0) {
-                doneJobs.forEach(job => {
-                    const card = createJobCard(job, 'completed');
-                    doneContainer.appendChild(card);
-                });
-            } else {
-                doneContainer.innerHTML = '<p class="empty">No completed jobs yet</p>';
-            }
-        }
-
-        function createJobCard(job, type) {
-            const card = document.createElement('div');
-            card.className = 'job-card';
+            const container = document.getElementById('completedJobs');
             
-            let actions = '';
-            if (type === 'available') {
-                actions = `
-                    <button onclick="acceptJob('${job.id}')" class="btn-primary">Accept Job</button>
-                    <button onclick="rejectJob('${job.id}')" class="btn-secondary">Reject</button>
-                `;
-            } else if (type === 'active') {
-                if (job.type === 'quotation' && !job.quotation_price) {
-                    actions = `<button onclick="openQuotation('${job.id}')" class="btn-primary">Submit Quotation</button>`;
-                } else {
-                    actions = `<button onclick="markDone('${job.id}')" class="btn-primary">Mark as Done</button>`;
-                }
-                actions += `<button onclick="openChat('${job.id}', '${job.customer_id}')" class="btn-secondary">Chat</button>`;
+            if (!jobs || jobs.length === 0) {
+                container.innerHTML = '<p class="empty">No completed jobs yet</p>';
+                return;
             }
 
-            card.innerHTML = `
-                <div class="job-header">
-                    <h4>${job.services?.name}</h4>
-                    <span class="location">${job.state}, ${job.lga}</span>
+            container.innerHTML = jobs.map(job => `
+                <div class="job-card completed">
+                    <div class="job-header">
+                        <h4>${job.services?.name}</h4>
+                        <span class="paid-status">${job.paid ? '✓ Paid' : 'Pending Payment'}</span>
+                    </div>
+                    <p>Customer: ${job.customers?.full_name}</p>
+                    <p class="price">₦${Math.floor((job.price || 0) * 0.7).toLocaleString()} earned</p>
                 </div>
-                <p>${job.description}</p>
-                ${job.image_url ? `<img src="${supabaseClient.storage.from('job_images').getPublicUrl(job.image_url).data.publicUrl}" class="job-image">` : ''}
-                ${job.price ? `<p class="price">₦${job.price.toLocaleString()}</p>` : ''}
-                ${job.quotation_price ? `<p class="quotation">Your Quote: ₦${job.quotation_price.toLocaleString()}</p>` : ''}
-                <div class="job-actions">${actions}</div>
-            `;
-            return card;
+            `).join('');
         }
 
+        // Verification
+        function openVerification() {
+            openModal('verifyModal');
+            initCamera();
+        }
+
+        async function initCamera() {
+            try {
+                faceStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: faceMode }
+                });
+                document.getElementById('faceVideo').srcObject = faceStream;
+            } catch (err) {
+                alert('Camera access required');
+            }
+        }
+
+        function switchCamera() {
+            faceMode = faceMode === 'user' ? 'environment' : 'user';
+            if (faceStream) faceStream.getTracks().forEach(t => t.stop());
+            initCamera();
+        }
+
+        function captureFace() {
+            const video = document.getElementById('faceVideo');
+            const canvas = document.getElementById('faceCanvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            capturedFace = canvas.toDataURL('image/jpeg');
+            document.getElementById('facePreview').innerHTML = '<p class="success-text">✓ Face captured</p>';
+            checkVerifyReady();
+        }
+
+        // ID upload
+        document.getElementById('workerIdUpload')?.addEventListener('click', () => {
+            document.getElementById('workerIdFile').click();
+        });
+
+        document.getElementById('workerIdFile')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('workerIdPreview').innerHTML = `
+                        <img src="${e.target.result}" style="max-width:100%;border-radius:8px;">
+                        <p class="success-text">✓ ID captured</p>
+                    `;
+                    capturedId = file;
+                    checkVerifyReady();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function checkVerifyReady() {
+            if (capturedFace && capturedId) {
+                document.getElementById('submitVerifyBtn').disabled = false;
+            }
+        }
+
+        async function submitVerification() {
+            // Upload ID
+            const { data: idUp } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`${workerSession.id}/id_${Date.now()}.jpg`, capturedId);
+
+            // Upload face
+            const faceFile = dataURLtoFile(capturedFace, 'face.jpg');
+            const { data: faceUp } = await supabaseClient
+                .storage
+                .from('verifications')
+                .upload(`${workerSession.id}/face_${Date.now()}.jpg`, faceFile);
+
+            // Update worker
+            await supabaseClient.from('workers').update({
+                verified: true,
+                id_image_url: idUp.path,
+                face_image_url: faceUp.path,
+                verified_at: new Date().toISOString()
+            }).eq('id', workerSession.id);
+
+            closeModal('verifyModal');
+            document.getElementById('verifyBanner').style.display = 'none';
+            alert('Verification complete! You can now accept jobs.');
+        }
+
+        // Job actions
         async function acceptJob(jobId) {
-            const session = JSON.parse(localStorage.getItem('user_session'));
-            await supabaseClient
-                .from('jobs')
-                .update({ worker_id: session.id, status: 'accepted' })
-                .eq('id', jobId);
-            
-            // Notify customer
+            const { data: worker } = await supabaseClient
+                .from('workers')
+                .select('verified')
+                .eq('id', workerSession.id)
+                .single();
+
+            if (!worker?.verified) {
+                alert('Complete verification first');
+                openVerification();
+                return;
+            }
+
+            await supabaseClient.from('jobs').update({
+                worker_id: workerSession.id,
+                status: 'accepted'
+            }).eq('id', jobId);
+
             const { data: job } = await supabaseClient
                 .from('jobs')
                 .select('customer_id')
                 .eq('id', jobId)
                 .single();
-            
+
             await createNotification(job.customer_id, 'A worker has accepted your job!');
-            loadWorkerDashboard();
+            loadAvailableJobs();
+            loadMyJobs();
         }
 
-        function openQuotation(jobId) {
-            currentJobForQuote = jobId;
-            document.getElementById('quotationModal').style.display = 'flex';
+        function openQuote(jobId) {
+            currentQuoteJob = jobId;
+            document.getElementById('quoteModal').style.display = 'flex';
         }
 
-        document.getElementById('basePrice').addEventListener('input', function() {
+        document.getElementById('quoteBase')?.addEventListener('input', function() {
             const base = parseFloat(this.value) || 0;
-            const final = base * 1.3;
-            document.getElementById('finalPrice').textContent = final.toLocaleString();
+            document.getElementById('customerPrice').textContent = Math.floor(base * 1.3).toLocaleString();
         });
 
-        document.getElementById('quotationForm').addEventListener('submit', async function(e) {
+        document.getElementById('quoteForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const basePrice = parseFloat(document.getElementById('basePrice').value);
-            const finalPrice = basePrice * 1.3;
+            
+            const base = parseFloat(document.getElementById('quoteBase').value);
+            const finalPrice = Math.floor(base * 1.3);
 
-            await supabaseClient
-                .from('jobs')
-                .update({
-                    quotation_price: finalPrice,
-                    materials: document.getElementById('materials').value,
-                    work_description: document.getElementById('workDesc').value
-                })
-                .eq('id', currentJobForQuote);
+            await supabaseClient.from('jobs').update({
+                quotation_price: finalPrice,
+                materials: document.getElementById('quoteMaterials').value,
+                work_description: document.getElementById('quoteDesc').value,
+                status: 'quotation_sent'
+            }).eq('id', currentQuoteJob);
 
-            // Notify customer
             const { data: job } = await supabaseClient
                 .from('jobs')
                 .select('customer_id')
-                .eq('id', currentJobForQuote)
+                .eq('id', currentQuoteJob)
                 .single();
+
+            await createNotification(job.customer_id, 'You have a new quotation!');
             
-            await createNotification(job.customer_id, 'You have a new quotation for your job!');
-            
-            document.getElementById('quotationModal').style.display = 'none';
-            loadWorkerDashboard();
+            closeModal('quoteModal');
+            loadMyJobs();
         });
 
-        async function markDone(jobId) {
-            await supabaseClient
-                .from('jobs')
-                .update({ status: 'awaiting_confirmation' })
-                .eq('id', jobId);
-            
-            // Notify customer
+        async function completeJob(jobId) {
+            await supabaseClient.from('jobs').update({
+                status: 'awaiting_confirmation'
+            }).eq('id', jobId);
+
             const { data: job } = await supabaseClient
                 .from('jobs')
                 .select('customer_id')
                 .eq('id', jobId)
                 .single();
-            
+
             await createNotification(job.customer_id, 'Your job is complete! Please confirm.');
-            loadWorkerDashboard();
+            loadMyJobs();
+        }
+
+        // Chat
+        function openChat(jobId, customerId) {
+            currentChatJob = jobId;
+            document.getElementById('chatModal').style.display = 'flex';
+            loadMessages();
+            chatInterval = setInterval(loadMessages, 3000);
+        }
+
+        function closeChat() {
+            document.getElementById('chatModal').style.display = 'none';
+            if (chatInterval) clearInterval(chatInterval);
+            currentChatJob = null;
+        }
+
+        async function loadMessages() {
+            if (!currentChatJob) return;
+            
+            const { data: messages } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('job_id', currentChatJob)
+                .order('created_at', { ascending: true });
+
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = messages?.map(msg => `
+                <div class="message ${msg.sender_id === workerSession.id ? 'me' : 'them'}">
+                    <p>${msg.message}</p>
+                    <span class="time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+                </div>
+            `).join('') || '';
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !currentChatJob) return;
+
+            await supabaseClient.from('messages').insert([{
+                job_id: currentChatJob,
+                sender_id: workerSession.id,
+                message: text,
+                created_at: new Date().toISOString()
+            }]);
+
+            input.value = '';
+            loadMessages();
+        }
+
+        // Referral
+        function copyReferral() {
+            const link = document.getElementById('referralLink');
+            link.select();
+            document.execCommand('copy');
+            alert('Link copied! Share to earn ₦2,000 per referral');
+        }
+
+        function shareWhatsApp() {
+            const link = document.getElementById('referralLink').value;
+            const text = `I work with DigsNat! Book professional services: ${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        }
+
+        function shareFacebook() {
+            const link = document.getElementById('referralLink').value;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`);
+        }
+
+        // Notifications
+        async function startNotifications() {
+            fetchNotifications();
+            setInterval(fetchNotifications, 5000);
+        }
+
+        async function fetchNotifications() {
+            const { data: notifs } = await supabaseClient
+                .from('notifications')
+                .select('*')
+                .eq('user_id', workerSession.id)
+                .eq('read', false);
+
+            const badge = document.getElementById('notifCount');
+            badge.textContent = notifs?.length || 0;
+            badge.style.display = notifs?.length > 0 ? 'flex' : 'none';
         }
 
         function logout() {
-            localStorage.removeItem('user_session');
-            window.location.href = '/index.html';
+            localStorage.removeItem('digsnat_session');
+            window.location.href = '/';
         }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) u8arr[n] = bstr.charCodeAt(n);
+            return new File([u8arr], filename, {type:mime});
+        }
+
+        function getImageUrl(bucket, path) {
+            return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+        }
+
+        function getAdLink(ad) {
+            switch(ad.link_type) {
+                case 'landing': return '/';
+                case 'service': return `/?service=${ad.link_target}`;
+                case 'apply_worker': return '/apply-worker';
+                case 'custom': return ad.link_target;
+                default: return '/';
+            }
+        }
+
+        async function trackAdClick(adId) {
+            await supabaseClient.rpc('increment_ad_click', { ad_id: adId });
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>

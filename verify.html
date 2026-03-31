@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - DigsNat</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="verify-page">
+    <div class="verify-container">
+        <div class="verify-card" id="verifyCard">
+            <div class="verify-icon" id="verifyIcon">⏳</div>
+            <h2 id="verifyTitle">Verifying...</h2>
+            <p id="verifyMessage">Please wait while we verify your email</p>
+            <a href="/" class="btn-primary" id="continueBtn" style="display:none;">Continue to DigsNat</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (!token) {
+                showError('Invalid verification link');
+                return;
+            }
+            
+            // Verify token
+            const { data: verification } = await supabaseClient
+                .from('verification_tokens')
+                .select('*')
+                .eq('token', token)
+                .single();
+            
+            if (!verification) {
+                showError('Invalid or expired verification link');
+                return;
+            }
+            
+            if (new Date(verification.expires_at) < new Date()) {
+                showError('Verification link has expired');
+                return;
+            }
+            
+            // Mark customer as verified
+            await supabaseClient
+                .from('customers')
+                .update({ email_verified: true })
+                .eq('id', verification.customer_id);
+            
+            // Delete used token
+            await supabaseClient
+                .from('verification_tokens')
+                .delete()
+                .eq('id', verification.id);
+            
+            // Log
+            await supabaseClient.from('logs').insert([{
+                action: 'EMAIL_VERIFIED',
+                status: 'SUCCESS',
+                details: `Customer ${verification.customer_id}`
+            }]);
+            
+            showSuccess();
+        });
+
+        function showSuccess() {
+            document.getElementById('verifyIcon').textContent = '✓';
+            document.getElementById('verifyIcon').style.color = 'var(--success)';
+            document.getElementById('verifyTitle').textContent = 'Email Verified!';
+            document.getElementById('verifyMessage').textContent = 'Your email has been successfully verified. You can now access all features.';
+            document.getElementById('continueBtn').style.display = 'inline-block';
+        }
+
+        function showError(msg) {
+            document.getElementById('verifyIcon').textContent = '✗';
+            document.getElementById('verifyIcon').style.color = 'var(--danger)';
+            document.getElementById('verifyTitle').textContent = 'Verification Failed';
+            document.getElementById('verifyMessage').textContent = msg;
+        }
+    </script>
+</body>
+</html>

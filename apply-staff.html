@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply to Join DigsNat Staff</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="simple-header">
+        <div class="container">
+            <a href="/" class="back-link">← Back to Home</a>
+            <h1>Join the DigsNat Team</h1>
+        </div>
+    </header>
+
+    <main class="application-main">
+        <div class="container">
+            <div class="application-form-container">
+                <h2>Staff Application</h2>
+                <p class="subtitle">Help us build Nigeria's best service marketplace. Selected candidates will be invited to our WhatsApp group for next steps.</p>
+
+                <div class="staff-roles-info">
+                    <div class="role-card">
+                        <h4>Regional Admin</h4>
+                        <p>Manage operations for your state. Handle disputes, verify workers, oversee local operations.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Support</h4>
+                        <p>Help customers and workers with queries. Ensure smooth service delivery.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Support Admin</h4>
+                        <p>Lead the support team. Handle escalations and complex issues.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4>Assistant Manager</h4>
+                        <p>Work directly with GM. Handle platform content, announcements, and special projects.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>Important:</strong> You must use your active WhatsApp number. Selected candidates will receive invitation links via WhatsApp.
+                </div>
+
+                <form id="staffApplyForm">
+                    <div class="form-group">
+                        <label>Position Applying For *</label>
+                        <select id="staffPosition" required>
+                            <option value="">Select Position</option>
+                            <option value="regional_admin">Regional Admin</option>
+                            <option value="support">Support Staff</option>
+                            <option value="support_admin">Support Admin</option>
+                            <option value="assistant_manager">Assistant Manager</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="preferredStateGroup" style="display:none;">
+                        <label>Preferred State (Required for Regional Admin & Support) *</label>
+                        <select id="preferredState">
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="staffName" required placeholder="Your full legal name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address *</label>
+                            <input type="email" id="staffEmail" required placeholder="your@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>WhatsApp Number *</label>
+                            <input type="tel" id="staffWhatsApp" required placeholder="+234 800 000 0000">
+                            <p class="hint">This must be your active WhatsApp number for group invitation</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Alternative Phone (Optional)</label>
+                            <input type="tel" id="staffPhone" placeholder="Secondary contact">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Years of Relevant Experience *</label>
+                        <select id="staffExperience" required>
+                            <option value="">Select</option>
+                            <option value="0-2">0-2 years</option>
+                            <option value="2-5">2-5 years</option>
+                            <option value="5-10">5-10 years</option>
+                            <option value="10+">10+ years</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Why do you want to join DigsNat? *</label>
+                        <textarea id="staffWhy" rows="3" required placeholder="Tell us about your motivation..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Relevant Experience & Skills *</label>
+                        <textarea id="staffExperienceDetail" rows="4" required placeholder="Describe your relevant work experience..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Resume/CV (PDF/DOC) *</label>
+                        <input type="file" id="staffResume" accept=".pdf,.doc,.docx" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="termsCheck" required>
+                            I confirm my WhatsApp number is correct and active. I agree to terms and confirm all information is accurate.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-full btn-large">Submit Application</button>
+                </form>
+
+                <div id="successMessage" class="success-message" style="display:none;">
+                    <div class="success-icon">✓</div>
+                    <h3>Application Received!</h3>
+                    <p>Thank you for your interest in joining DigsNat.</p>
+                    <p><strong>Next Steps:</strong></p>
+                    <ul style="text-align:left;max-width:400px;margin:20px auto;">
+                        <li>Our team will review your application</li>
+                        <li>Qualified candidates will be contacted via WhatsApp</li>
+                        <li>Selected candidates join our WhatsApp group for onboarding</li>
+                        <li>Account setup and verification follows</li>
+                    </ul>
+                    <a href="/" class="btn-secondary">Return to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="simple-footer">
+        <div class="container">
+            <p>&copy; 2026 DigsNat Services. Proudly Nigerian 🇳🇬</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+            populateStates();
+            
+            document.getElementById('staffPosition').addEventListener('change', (e) => {
+                const needsState = ['regional_admin', 'support'].includes(e.target.value);
+                const group = document.getElementById('preferredStateGroup');
+                group.style.display = needsState ? 'block' : 'none';
+                document.getElementById('preferredState').required = needsState;
+            });
+        });
+
+        document.getElementById('staffApplyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const resumeFile = document.getElementById('staffResume').files[0];
+            let resumeUrl = null;
+            
+            if (resumeFile) {
+                const { data } = await supabaseClient
+                    .storage
+                    .from('resumes')
+                    .upload(`${Date.now()}_${resumeFile.name}`, resumeFile);
+                resumeUrl = data?.path;
+            }
+
+            const applicationData = {
+                position: document.getElementById('staffPosition').value,
+                full_name: document.getElementById('staffName').value,
+                email: document.getElementById('staffEmail').value,
+                whatsapp_number: document.getElementById('staffWhatsApp').value,
+                phone: document.getElementById('staffPhone').value || null,
+                preferred_state: document.getElementById('preferredState').value || null,
+                experience_years: document.getElementById('staffExperience').value,
+                why_join: document.getElementById('staffWhy').value,
+                experience_detail: document.getElementById('staffExperienceDetail').value,
+                resume_url: resumeUrl,
+                status: 'pending_review',
+                applied_at: new Date().toISOString()
+            };
+
+            const { data, error } = await supabaseClient
+                .from('staff_applications')
+                .insert([applicationData])
+                .select()
+                .single();
+
+            if (error) {
+                alert('Error: ' + error.message);
+                return;
+            }
+
+            await supabaseClient.from('logs').insert([{
+                action: 'STAFF_APPLICATION',
+                status: 'SUCCESS',
+                details: `Application for ${applicationData.position} from ${applicationData.email}`
+            }]);
+
+            document.getElementById('staffApplyForm').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+        });
+
+        function populateStates() {
+            const states = ['Abia', 'Abuja', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 
+                'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 
+                'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 
+                'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'];
+            
+            const options = states.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('preferredState').innerHTML += options;
+        }
+    </script>
+</body>
+</html>

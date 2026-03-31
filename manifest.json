@@ -1,7 +1,7 @@
 {
-    "name": "DigsNat Services",
+    "name": "DigsNat - Professional Services",
     "short_name": "DigsNat",
-    "description": "Nigeria's Premier Service Platform - Connect with verified experts",
+    "description": "Connect with verified service professionals across Nigeria",
     "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#ffffff",
@@ -26,8 +26,24 @@
             "purpose": "maskable"
         }
     ],
-    "categories": ["business", "productivity"],
+    "categories": ["business", "productivity", "lifestyle"],
     "lang": "en",
     "dir": "ltr",
-    "prefer_related_applications": false
+    "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "My Bookings",
+            "short_name": "Bookings",
+            "description": "View your service bookings",
+            "url": "/index.html#dashboard",
+            "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "New Booking",
+            "short_name": "Book",
+            "description": "Book a new service",
+            "url": "/index.html#book",
+            "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
 }
